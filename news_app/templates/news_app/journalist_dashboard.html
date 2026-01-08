@@ -1,21 +1,32 @@
-{% extends "news_app/base.html" %}
+
+{% extends 'news_app/base.html' %}
+{% block title %}My Articles{% endblock %}
+
 {% block content %}
+<h2 class="mb-4">My Submitted Articles</h2>
 
-<h2>My Articles</h2>
+<a href="{% url 'submit_article' %}" class="btn btn-success mb-3">Submit New Article</a>
 
-<a href="{% url 'submit_article' %}">Submit New Article</a>
-
-<ul>
-{% for article in articles %}
-    <li>
-        <strong>{{ article.title }}</strong> —
-        {% if article.approved %}
-            ✅ Approved
-        {% else %}
-            ⏳ Pending Approval
-        {% endif %}
-    </li>
-{% endfor %}
-</ul>
-
+<div class="row">
+    {% for article in articles %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card {% if not article.approved %}border-warning{% else %}border-success{% endif %}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ article.title }}</h5>
+                    <p class="card-text">{{ article.content|truncatechars:150 }}</p>
+                    <p>
+                        <strong>Status:</strong> 
+                        {% if article.approved %}
+                            <span class="text-success">Approved</span>
+                        {% else %}
+                            <span class="text-warning">Pending Approval</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p>You haven't submitted any articles yet.</p>
+    {% endfor %}
+</div>
 {% endblock %}

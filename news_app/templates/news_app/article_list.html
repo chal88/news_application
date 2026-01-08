@@ -1,36 +1,26 @@
-{% extends "news_app/base.html" %}
+
+{% extends 'news_app/base.html' %}
+{% block title %}All Articles{% endblock %}
 
 {% block content %}
+<h2 class="mb-4">Approved Articles</h2>
 
-<h1>Latest News</h1>
-
-{% if user.is_authenticated %}
-    <p>
-        Welcome, <strong>{{ user.username }}</strong> |
-        <a href="{% url 'logout' %}">Logout</a>
-    </p>
-{% endif %}
-
-<hr>
-
-{% if articles %}
+<div class="row">
     {% for article in articles %}
-        <article style="margin-bottom: 30px;">
-            <h2>{{ article.title }}</h2>
-
-            <p>
-                {{ article.content|truncatewords:40 }}
-            </p>
-
-            <a href="{% url 'article_detail' article.id %}">
-                Read full article →
-            </a>
-        </article>
-
-        <hr>
+        <div class="col-md-6 col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ article.title }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">By {{ article.journalist.username }}</h6>
+                    <p class="card-text">
+                        {{ article.content|truncatechars:200 }}
+                    </p>
+                    <a href="{% url 'article_detail' article.id %}" class="btn btn-primary btn-sm">Read More</a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p>No approved articles available.</p>
     {% endfor %}
-{% else %}
-    <p>No articles available.</p>
-{% endif %}
-
+</div>
 {% endblock %}

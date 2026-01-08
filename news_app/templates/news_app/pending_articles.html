@@ -1,16 +1,23 @@
 {% extends 'news_app/base.html' %}
+{% block title %}Pending Articles{% endblock %}
 
 {% block content %}
-<h2>Pending Articles</h2>
+<h2 class="mb-4">Pending Articles for Approval</h2>
 
-<ul>
+<div class="row">
     {% for article in articles %}
-        <li>
-            <strong>{{ article.title }}</strong>
-            <a href="{% url 'approve_article' article.id %}">Approve</a>
-        </li>
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h5 class="card-title">{{ article.title }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">By {{ article.journalist.username }}</h6>
+                    <p class="card-text">{{ article.content|truncatechars:150 }}</p>
+                    <a href="{% url 'approve_article' article.id %}" class="btn btn-success btn-sm">Approve</a>
+                </div>
+            </div>
+        </div>
     {% empty %}
-        <li>No pending articles.</li>
+        <p>No pending articles at the moment.</p>
     {% endfor %}
-</ul>
+</div>
 {% endblock %}

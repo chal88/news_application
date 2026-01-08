@@ -1,17 +1,46 @@
-{% extends "news_app/base.html" %}
+{% extends 'news_app/base.html' %}
+{% block title %}Submit Article{% endblock %}
+
 {% block content %}
+<h2 class="mb-4">Submit a New Article</h2>
 
-<h2>Submit Article</h2>
-
-<form method="post">
+<form method="post" class="needs-validation" novalidate>
     {% csrf_token %}
-    <label>Title</label><br>
-    <input type="text" name="title" required><br><br>
+    <div class="mb-3">
+        <label for="title" class="form-label">Title</label>
+        <input type="text" class="form-control" id="title" name="title" required>
+        <div class="invalid-feedback">
+            Please provide a title.
+        </div>
+    </div>
 
-    <label>Content</label><br>
-    <textarea name="content" rows="6" required></textarea><br><br>
+    <div class="mb-3">
+        <label for="content" class="form-label">Content</label>
+        <textarea class="form-control" id="content" name="content" rows="6" required></textarea>
+        <div class="invalid-feedback">
+            Content cannot be empty.
+        </div>
+    </div>
 
-    <button type="submit">Submit</button>
+    <button type="submit" class="btn btn-primary">Submit Article</button>
 </form>
 
+<script>
+    // Bootstrap form validation
+    (() => {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+
 {% endblock %}
+

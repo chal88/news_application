@@ -1,27 +1,59 @@
-{% extends "news_app/base.html" %}
+{% extends 'news_app/base.html' %}
+{% block title %}Login{% endblock %}
 
 {% block content %}
-<h2>Login</h2>
+<h2 class="mb-4">User Login</h2>
 
-<form method="post">
+<form method="post" class="needs-validation" novalidate>
     {% csrf_token %}
 
-    <label>Username</label><br>
-    <input type="text" name="username" required><br><br>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-danger">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
 
-    <label>Password</label><br>
-    <input type="password" name="password" required><br><br>
+    <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" name="username" required>
+        <div class="invalid-feedback">Enter your username.</div>
+    </div>
 
-    <label>Login as:</label><br>
-    <input type="radio" name="role" value="reader" required> Reader<br>
-    <input type="radio" name="role" value="journalist"> Journalist<br>
-    <input type="radio" name="role" value="editor"> Editor<br><br>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+        <div class="invalid-feedback">Enter your password.</div>
+    </div>
 
-    <button type="submit">Login</button>
+    <div class="mb-3">
+        <label for="role" class="form-label">Select Role</label>
+        <select class="form-select" id="role" name="role" required>
+            <option value="">-- Choose Role --</option>
+            <option value="journalist">Journalist</option>
+            <option value="editor">Editor</option>
+            <option value="reader">Reader</option>
+        </select>
+        <div class="invalid-feedback">Select your role.</div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Login</button>
 </form>
 
-{% for message in messages %}
-<p style="color:red;">{{ message }}</p>
-{% endfor %}
-
+<script>
+    // Bootstrap form validation
+    (() => {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
 {% endblock %}
+
