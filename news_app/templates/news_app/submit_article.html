@@ -1,0 +1,17 @@
+{% extends "news_app/base.html" %}
+{% block content %}
+
+<h2>Submit Article</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <label>Title</label><br>
+    <input type="text" name="title" required><br><br>
+
+    <label>Content</label><br>
+    <textarea name="content" rows="6" required></textarea><br><br>
+
+    <button type="submit">Submit</button>
+</form>
+
+{% endblock %}

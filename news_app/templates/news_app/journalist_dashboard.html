@@ -1,0 +1,21 @@
+{% extends "news_app/base.html" %}
+{% block content %}
+
+<h2>My Articles</h2>
+
+<a href="{% url 'submit_article' %}">Submit New Article</a>
+
+<ul>
+{% for article in articles %}
+    <li>
+        <strong>{{ article.title }}</strong> —
+        {% if article.approved %}
+            ✅ Approved
+        {% else %}
+            ⏳ Pending Approval
+        {% endif %}
+    </li>
+{% endfor %}
+</ul>
+
+{% endblock %}

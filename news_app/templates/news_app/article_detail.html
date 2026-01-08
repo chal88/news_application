@@ -1,0 +1,11 @@
+{% extends "news_app/base.html" %}
+
+{% block content %}
+<h1>{{ article.title }}</h1>
+
+<p>
+    {{ article.content }}
+</p>
+
+<a href="{% url 'article_list' %}">← Back to articles</a>
+{% endblock %}
