@@ -4,6 +4,7 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+    """Add 'notified' field to Article model."""
 
     dependencies = [
         ('news_app', '0001_initial'),

@@ -1,4 +1,4 @@
-# news_app/apps.py
+"""News App Configuration"""
 from django.apps import AppConfig
 
 

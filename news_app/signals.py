@@ -7,13 +7,14 @@ from django.conf import settings
 from django.core.mail import send_mail
 import requests
 from django.db import models
-
 from .models import Article, CustomUser
 
 
 @receiver(post_migrate)
-def create_user_groups(_sender, **_kwargs):
+def create_user_groups(sender, **kwargs):
     """Create user groups and assign permissions after migrations."""
+    if sender.name != 'news_app':
+        return
     reader_group, _ = Group.objects.get_or_create(name='Reader')
     editor_group, _ = Group.objects.get_or_create(name='Editor')
     journalist_group, _ = Group.objects.get_or_create(name='Journalist')
@@ -104,7 +105,8 @@ def post_to_x(article):
     }
 
     try:
-        response = requests.post(settings.X_API_URL, headers=headers, json=payload, timeout=5)
+        response = requests.post(settings.X_API_URL,
+                                 headers=headers, json=payload, timeout=5)
         response.raise_for_status()
     except requests.RequestException:
         pass  # fail silently

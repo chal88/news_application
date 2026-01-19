@@ -20,6 +20,10 @@ class SubscribedArticlesAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        """
+        Returns approved articles based on reader subscriptions.
+        Only accessible to authenticated readers.
+        """
         user = request.user
 
         # Ensure only readers can access the API

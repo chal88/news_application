@@ -1,5 +1,7 @@
 # Django News Application
 
+“SQLite is used for local development. The application is compatible with MariaDB for production deployment.”
+
 ## Overview
 This is a **Django-based News Application** that supports multiple user roles, article submission and approval workflows, email notifications, and a REST API. It is designed for learning full-stack development concepts such as authentication, permissions, and API integration.
 

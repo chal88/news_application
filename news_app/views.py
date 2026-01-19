@@ -29,7 +29,8 @@ def user_login(request):
             return redirect("login")
 
         if user.role != role:
-            messages.error(request, "Selected role does not match your account.")
+            messages.error(
+                request, "Selected role does not match your account.")
             return redirect("login")
 
         login(request, user)
