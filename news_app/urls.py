@@ -14,6 +14,7 @@ from . import views
 
 urlpatterns = [
     path("", article_list, name="article_list"),
+    path(" ", views.home, name="home"),
     path("login/", user_login, name="login"),
     path("logout/", user_logout, name="logout"),
 

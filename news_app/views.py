@@ -18,39 +18,51 @@ from .forms import UserRegisterForm
 def register(request):
     """Handle user registration."""
     if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
+        form = UserRegisterForm(request.POST, current_user=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, "Account created successfully. You can now log in.")
             return redirect('login')
     else:
-        form = UserRegisterForm()
+        form = UserRegisterForm(current_user=request.user)
 
     return render(request, 'news_app/register.html', {'form': form})
+
+
+def home(request):
+    """Home page view."""
+    # You can redirect readers or show generic landing page
+    return render(request, 'news_app/home.html')
 
 
 # -------------------------
 # AUTHENTICATION VIEWS
 # -------------------------
 
+
+from django.contrib.auth import authenticate, login
+
+
 def user_login(request):
-    """Handle login for journalist, editor, and reader."""
+    """Log in the user and redirect based on role."""
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
 
         user = authenticate(request, username=username, password=password)
 
-        if user:
+        if user is None:
             messages.error(request, "Invalid username or password.")
-            return redirect("home")
+            return redirect("login")
+
+        login(request, user)
 
         # Redirect by role
-        if role == "journalist":
+        if user.role == "journalist":
             return redirect("journalist_dashboard")
-        elif role == "editor":
+        elif user.role == "editor":
             return redirect("pending_articles")
-        elif role == "reader":
+        else:
             return redirect("article_list")
 
     return render(request, "news_app/login.html")
