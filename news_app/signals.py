@@ -11,6 +11,11 @@ from .models import Article, CustomUser
 import tweepy
 import logging
 
+try:
+    import tweepy
+except ImportError:
+    tweepy = None
+
 
 @receiver(post_migrate)
 def create_user_groups(sender, **kwargs):
@@ -116,4 +121,6 @@ def post_to_x(article):
     except Exception:
         logger.exception("Failed to post article to X")
         raise
-
+    if tweepy is None:
+        logger.warning("Tweepy not installed; skipping X post")
+        return
