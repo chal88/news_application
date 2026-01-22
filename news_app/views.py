@@ -7,8 +7,26 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-
 from .models import Article
+from .forms import UserRegisterForm
+
+# -------------------------
+# REGISTRATION VIEW
+# -------------------------
+
+
+def register(request):
+    """Handle user registration."""
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Account created successfully. You can now log in.")
+            return redirect('login')
+    else:
+        form = UserRegisterForm()
+
+    return render(request, 'news_app/register.html', {'form': form})
 
 
 # -------------------------
@@ -20,20 +38,12 @@ def user_login(request):
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
-        role = request.POST.get("role")
 
         user = authenticate(request, username=username, password=password)
 
-        if user is None:
+        if user:
             messages.error(request, "Invalid username or password.")
-            return redirect("login")
-
-        if user.role != role:
-            messages.error(
-                request, "Selected role does not match your account.")
-            return redirect("login")
-
-        login(request, user)
+            return redirect("home")
 
         # Redirect by role
         if role == "journalist":

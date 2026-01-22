@@ -10,6 +10,7 @@ from .views import (
     submit_article,
     article_detail
 )
+from . import views
 
 urlpatterns = [
     path("", article_list, name="article_list"),
@@ -26,6 +27,8 @@ urlpatterns = [
     path(
         "articles/<int:article_id>/",
         article_detail,
-        name="article_detail")
+        name="article_detail"),
+    path('register/', views.register, name='register'),
+
 
 ]
