@@ -155,5 +155,26 @@ AUTH_USER_MODEL = 'news_app.CustomUser'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'news@app.com'
 
-X_API_BEARER_TOKEN = 'YOUR_X_BEARER_TOKEN'
-X_API_URL = 'https://api.twitter.com/2/tweets'
+
+# X API credentials
+X_API_KEY = os.getenv("X_API_KEY")
+X_API_SECRET = os.getenv("X_API_SECRET")
+X_ACCESS_TOKEN = os.getenv("X_ACCESS_TOKEN")
+X_ACCESS_TOKEN_SECRET = os.getenv("X_ACCESS_TOKEN_SECRET")
+X_BEARER_TOKEN = os.getenv("X_BEARER_TOKEN")
+
+# Logging configuration
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}
+

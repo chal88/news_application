@@ -8,6 +8,8 @@ from django.core.mail import send_mail
 import requests
 from django.db import models
 from .models import Article, CustomUser
+import tweepy
+import logging
 
 
 @receiver(post_migrate)
@@ -93,20 +95,25 @@ Author: {instance.journalist.username}
     Article.objects.filter(id=instance.id).update(notified=True)
 
 
+logger = logging.getLogger(__name__)
+
+
 def post_to_x(article):
-    """Posts article summary to X using the X API."""
-    headers = {
-        "Authorization": f"Bearer {settings.X_API_BEARER_TOKEN}",
-        "Content-Type": "application/json",
-    }
-
-    payload = {
-        "text": f"📰 {article.title}\n\n{article.content[:200]}..."
-    }
-
+    """Posts article summary to X using OAuth 1.0a."""
     try:
-        response = requests.post(settings.X_API_URL,
-                                 headers=headers, json=payload, timeout=5)
-        response.raise_for_status()
-    except requests.RequestException:
-        pass  # fail silently
+        client = tweepy.Client(
+            consumer_key=settings.X_API_KEY,
+            consumer_secret=settings.X_API_SECRET,
+            access_token=settings.X_ACCESS_TOKEN,
+            access_token_secret=settings.X_ACCESS_TOKEN_SECRET,
+        )
+
+        tweet_text = f"📰 {article.title}\n\n{article.content[:200]}..."
+        client.create_tweet(text=tweet_text)
+
+        logger.info("Article successfully posted to X")
+
+    except Exception:
+        logger.exception("Failed to post article to X")
+        raise
+

@@ -38,6 +38,7 @@ It is designed for learning full-stack development concepts such as **authentica
 * **Bootstrap-based frontend templates**
 * **Unit tests** for core workflows
 * **Use case diagram** for planning and test mapping
+* secure environment variable management
 
 ---
 
@@ -50,6 +51,45 @@ It is designed for learning full-stack development concepts such as **authentica
 | Editor     | Approve/reject articles, edit or delete any article |
 
 > 🔐 Editors cannot self-register and must be created by an administrator.
+
+---
+
+## Key Features
+
+- Role-based authentication and dashboards
+- Article approval workflow
+- Email notifications when articles are approved
+- Secure posting of article summaries to **X (Twitter)** using OAuth 1.0a
+- REST API endpoint: `/api/articles/`
+- Bootstrap-based frontend UI
+- Unit tests for models, views, and workflows
+
+---
+
+## Technology Stack
+
+- Python 3.13
+- Django 5+
+- SQLite (local development & testing)
+- MySQL / MariaDB (production-ready)
+- Bootstrap 5
+- Tweepy (X API integration)
+- python-dotenv
+
+---
+
+## Environment Variables (IMPORTANT)
+
+Sensitive credentials are stored in a `.env` file **not committed to GitHub**.
+
+### `.env` example (DO NOT COMMIT)
+
+```env
+X_API_KEY=your_api_key
+X_API_SECRET=your_api_secret
+X_ACCESS_TOKEN=your_access_token
+X_ACCESS_TOKEN_SECRET=your_access_token_secret
+X_BEARER_TOKEN=your_bearer_token
 
 ---
 

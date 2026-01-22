@@ -10,4 +10,4 @@ class NewsAppConfig(AppConfig):
     name = 'news_app'
 
     def ready(self):
-        import news_app.signals  # ensures signals are registered
+        import news_app.signals  # noqa: F401 ensures signals are registered
