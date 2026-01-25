@@ -4,11 +4,11 @@ HTML views for the news app.
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from .models import Article
-from .forms import UserRegisterForm
+from news_app.models import Article
+from .forms import UserRegisterForm, ArticleForm
 
 # -------------------------
 # REGISTRATION VIEW
@@ -21,7 +21,8 @@ def register(request):
         form = UserRegisterForm(request.POST, current_user=request.user)
         if form.is_valid():
             form.save()
-            messages.success(request, "Account created successfully. You can now log in.")
+            messages.success(request, "Account created successfully. "
+                             "You can now log in.")
             return redirect('login')
     else:
         form = UserRegisterForm(current_user=request.user)
@@ -40,28 +41,25 @@ def home(request):
 # -------------------------
 
 
-from django.contrib.auth import authenticate, login
-
-
 def user_login(request):
-    """Log in the user and redirect based on role."""
+    """Log in the user with role-based redirection."""
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
 
         user = authenticate(request, username=username, password=password)
 
-        if user is None:
+        if not user:
             messages.error(request, "Invalid username or password.")
             return redirect("login")
 
         login(request, user)
 
-        # Redirect by role
+        # 🔑 ROLE-BASED REDIRECT (automatic)
         if user.role == "journalist":
             return redirect("journalist_dashboard")
         elif user.role == "editor":
-            return redirect("pending_articles")
+            return redirect("editor_dashboard")
         else:
             return redirect("article_list")
 
@@ -94,25 +92,41 @@ def article_list(request):
 # -------------------------
 
 @login_required
-@permission_required("news_app.change_article", raise_exception=True)
-def pending_articles(request):
-    """List articles pending approval."""
-    articles = Article.objects.filter(approved=False)
+def editor_dashboard(request):
+    """Dashboard for editors."""
+    if request.user.role != "editor":
+        raise PermissionDenied
+
+    publishing_house = request.user.publishing_house
+
+    articles = Article.objects.filter(
+        approved=False,
+        publishing_house=publishing_house
+    )
+
     return render(
         request,
-        "news_app/pending_articles.html",
+        "news_app/editor_dashboard.html",
         {"articles": articles}
     )
 
 
 @login_required
-@permission_required("news_app.change_article", raise_exception=True)
 def approve_article(request, article_id):
     """Approve an article."""
-    article = get_object_or_404(Article, id=article_id)
+    if request.user.role != "editor":
+        raise PermissionDenied
+
+    article = get_object_or_404(
+        Article,
+        id=article_id,
+        publishing_house=request.user.publishing_house
+    )
+
     article.approved = True
     article.save()
-    return redirect("pending_articles")
+
+    return redirect("editor_dashboard")
 
 
 # -------------------------
@@ -135,25 +149,28 @@ def journalist_dashboard(request):
 
 @login_required
 def submit_article(request):
-    """Allow journalists to submit articles."""
+    """Submit a new article."""
     if request.user.role != "journalist":
         raise PermissionDenied
 
     if request.method == "POST":
-        title = request.POST.get("title")
-        content = request.POST.get("content")
+        form = ArticleForm(request.POST)
+        if form.is_valid():
+            article = form.save(commit=False)
+            article.journalist = request.user
+            article.approved = False
+            article.save()
 
-        Article.objects.create(
-            title=title,
-            content=content,
-            journalist=request.user,
-            approved=False
-        )
+            messages.success(request, "Article submitted for approval.")
+            return redirect("journalist_dashboard")
+    else:
+        form = ArticleForm()
 
-        messages.success(request, "Article submitted for approval.")
-        return redirect("journalist_dashboard")
-
-    return render(request, "news_app/submit_article.html")
+    return render(
+        request,
+        "news_app/submit_article.html",
+        {"form": form}
+    )
 
 
 def article_detail(request, article_id):

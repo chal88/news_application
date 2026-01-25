@@ -4,7 +4,7 @@ from .views import (
     user_login,
     user_logout,
     article_list,
-    pending_articles,
+    editor_dashboard,
     approve_article,
     journalist_dashboard,
     submit_article,
@@ -18,8 +18,8 @@ urlpatterns = [
     path("login/", user_login, name="login"),
     path("logout/", user_logout, name="logout"),
 
-    path("editor/pending/", pending_articles, name="pending_articles"),
-    path("editor/approve/<int:article_id>/", approve_article,
+    path("editor/", views.editor_dashboard, name="editor_dashboard"),
+    path("approve/<int:article_id>/", views.approve_article,
          name="approve_article"),
 
     path("journalist/dashboard/", journalist_dashboard,

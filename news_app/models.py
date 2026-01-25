@@ -1,47 +1,35 @@
-"""Models for the news application, including custom user model with roles
-and subscriptions."""
+"""Models for the news application, including 
+custom user roles and articles."""
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 
 
-class Publisher(models.Model):
-    """Model representing a news publisher."""
-    name = models.CharField(max_length=255)
-    description = models.TextField()
+class PublishingHouse(models.Model):
+    """A publishing house that journalists and editors belong to."""
+    name = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
         return str(self.name)
 
 
 class CustomUser(AbstractUser):
-    """Custom user model with roles and subscription capabilities."""
+    """Custom user model with roles."""
+
     ROLE_CHOICES = (
-        ('reader', 'Reader'),
-        ('editor', 'Editor'),
-        ('journalist', 'Journalist'),
+        ("reader", "Reader"),
+        ("journalist", "Journalist"),
+        ("editor", "Editor"),
     )
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
 
-    publisher = models.ForeignKey(
-        Publisher,
+    publishing_house = models.ForeignKey(
+        PublishingHouse,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        on_delete=models.SET_NULL
-    )
-
-    subscribed_publishers = models.ManyToManyField(
-        Publisher,
-        blank=True,
-        related_name='subscribers'
-    )
-
-    subscribed_journalists = models.ManyToManyField(
-        'self',
-        blank=True,
-        symmetrical=False,
-        related_name='journalist_subscribers'
+        help_text="Required for editors and journalists only"
     )
 
     def __str__(self):
@@ -49,26 +37,35 @@ class CustomUser(AbstractUser):
 
 
 class Article(models.Model):
-    """Model representing a news article."""
-    title = models.CharField(max_length=255)
-    content = models.TextField()
-    approved = models.BooleanField(default=False)
-    notified = models.BooleanField(default=False)
+    """News article model."""
 
-    publisher = models.ForeignKey(
-        Publisher,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL
-    )
+    title = models.CharField(max_length=200)
+    content = models.TextField()
 
     journalist = models.ForeignKey(
-        CustomUser,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='articles'
+        limit_choices_to={"role": "journalist"},
+        related_name="articles"
     )
 
+    publishing_house = models.ForeignKey(
+        PublishingHouse,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="articles"
+    )
+
+    approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return str(self.title)
+
+
+
+
+from django.db import models
+
+

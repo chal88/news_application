@@ -1,6 +1,6 @@
 """Serializers for the news app."""
 from rest_framework import serializers
-from news_app.models import Article, Publisher
+from news_app.models import Article, PublishingHouse
 
 
 class ArticleSerializer(serializers.ModelSerializer):
@@ -23,9 +23,9 @@ class ArticleSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class PublisherSerializer(serializers.ModelSerializer):
-    """Serializer for the Publisher model."""
+class PublishingHouseSerializer(serializers.ModelSerializer):
+    """Serializer for the PublishingHouse model."""
     class Meta:
-        """Meta class for PublisherSerializer."""
-        model = Publisher
-        fields = ['id', 'name']
+        """Meta class for PublishingHouseSerializer."""
+        model = PublishingHouse
+        fields = '__all__'

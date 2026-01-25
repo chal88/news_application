@@ -22,6 +22,13 @@ It is designed for learning full-stack development concepts such as **authentica
 
 ---
 
+### Models
+
+- **CustomUser**: Extended user model with roles (`reader`, `journalist`, `editor`) and optional association to a `PublishingHouse`.
+- **PublishingHouse**: Represents a publishing house managed by an editor. Editors are linked one-to-one to a PublishingHouse.
+- **Article**: News articles submitted by journalists, optionally linked to a PublishingHouse, with an approval status.
+
+
 ## ✨ Key Features
 
 * Multi-role users: **Reader, Journalist, Editor**
@@ -127,196 +134,6 @@ This diagram was used to **plan application logic and unit tests**.
 
 ---
 
-You’re actually very close 👍
-The error is **not in your tests** — it’s in your **database configuration for testing**.
-
-Let’s break this down clearly and then fix it step by step.
-
----
-
-## ✅ What the error is telling you (plain English)
-
-### The key error
-
-```text
-django.db.utils.OperationalError: (2003, "Can't connect to MySQL server on '127.0.0.1:3306' (61)")
-```
-
-### Meaning
-
-Django is trying to:
-
-* Use **MySQL**
-* Connect to **127.0.0.1:3306**
-* While running `python manage.py test`
-
-But:
-
-* **MySQL is not running**, OR
-* **MySQL is not installed**, OR
-* **You intended to use SQLite for local/testing**, but Django is still configured for MySQL
-
-👉 This is **expected** given what you wrote in your README:
-
-> “SQLite is used for local development. The application is compatible with MariaDB for production deployment.”
-
-Right now, your **settings.py does not reflect that separation**.
-
----
-
-## 🔍 Why this happens specifically during `manage.py test`
-
-When Django runs tests, it:
-
-1. Reads `DATABASES` from `settings.py`
-2. Tries to **create a test database**
-3. Uses the **same database engine** unless told otherwise
-
-Your settings are currently something like:
-
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'news_db',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-    }
-}
-```
-
-So Django says:
-
-> “Cool, I’ll create a MySQL test database.”
-
-But MySQL isn’t available → 💥 crash.
-
----
-
-## ✅ The CORRECT fix (best practice)
-
-### Use:
-
-* **SQLite for local dev + tests**
-* **MySQL/MariaDB only in production**
-
-### Option 1 (RECOMMENDED): Environment-based settings
-
-#### 1️⃣ Update `settings.py`
-
-```python
-import os
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-ENVIRONMENT = os.getenv("DJANGO_ENV", "development")
-
-if ENVIRONMENT == "production":
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.mysql",
-            "NAME": os.getenv("DB_NAME"),
-            "USER": os.getenv("DB_USER"),
-            "PASSWORD": os.getenv("DB_PASSWORD"),
-            "HOST": os.getenv("DB_HOST", "127.0.0.1"),
-            "PORT": os.getenv("DB_PORT", "3306"),
-        }
-    }
-else:
-    # Development & Testing
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
-```
-
----
-
-#### 2️⃣ Run tests (no MySQL needed)
-
-```bash
-python manage.py test
-```
-
-✅ Django will now:
-
-* Use SQLite
-* Auto-create a test DB
-* Run tests successfully
-
----
-
-### Option 2 (Quick fix): Force SQLite for tests only
-
-If you want the **fastest fix**, add this to `settings.py`:
-
-```python
-if "test" in sys.argv:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": ":memory:",
-        }
-    }
-```
-
-This uses an **in-memory database** for tests 🚀
-
----
-
-## 🧪 Why your earlier error changed
-
-You previously saw:
-
-```text
-AttributeError: 'PosixPath' object has no attribute 'startswith'
-```
-
-That happens when:
-
-* MySQL backend expects a **string DB name**
-* But receives a `Path` object
-
-That’s another sign that **MySQL + SQLite settings were mixed incorrectly**.
-
-Fixing the database separation resolves **both errors**.
-
----
-
-## ✅ What to verify after fixing
-
-Run these commands:
-
-```bash
-python manage.py check
-python manage.py makemigrations
-python manage.py migrate
-python manage.py test
-```
-
-Expected result:
-
-```text
-Found 4 test(s).
-Creating test database for alias 'default'...
-....
-----------------------------------------------------------------------
-Ran 4 tests in X.XXXs
-
-OK
-```
-
----
-
-## 🧠 What to update in your README (important)
-
-Add this section:
-
-````md
-
 ## Testing
 
 This project uses **SQLite for development and testing**.
@@ -342,6 +159,20 @@ For production, configure **MariaDB/MySQL** using environment variables:
 ```
 news_app/tests.py
 ```
+### Testing
+
+1. **Reader Registration**: Use the register page, select Reader, and verify you can login and see articles.  
+2. **Journalist Registration**: Use the register page, select Journalist, submit an article, and confirm it appears as pending.  
+3. **Editor Registration**: Must be done by superuser via Django Admin:
+   - Go to Admin → Users → Add Editor.
+   - Set role = Editor.
+   - Set password using **"Set Password"**, not the raw password field.
+   - Login with editor credentials and confirm dashboard shows pending articles.
+4. **Role-Based Redirects**: Login with each role to confirm you are redirected automatically to the correct dashboard.
+5. **Publishing House Filtering**:
+   - Journalist assigns article to a Publishing House.
+   - Editor linked to that Publishing House should see the article in their dashboard.
+
 
 ### Covered Test Cases
 
@@ -583,55 +414,34 @@ Errors from external APIs are **logged to the console** to ensure visibility and
 
 ---
 
-## 🔮 Future Improvements
+## Architecture & Role Relationships
 
-* Pagination and search
-* Rich text editor for articles
-* Deployment to production server
-* API authentication
-* Image uploads for articles
+This application models real-world publishing workflows using relational data.
 
----
+### User Roles
 
-## 👨‍🏫 Mentor Notes
+- **Reader**: Can register normally. Views approved articles.  
+- **Journalist**: Can submit articles independently or under a Publishing House.  
+- **Editor**: Must be created by the superuser. Can view and approve pending articles submitted to their Publishing House.  
 
-This project demonstrates:
+**Login Behavior**:
+- After login, the user is redirected automatically to the appropriate dashboard:
+  - Journalists → Journalist Dashboard
+  - Editors → Editor Dashboard
+  - Readers → Article List
 
-* Secure authentication and authorization
-* Proper separation of user roles
-* Signal-driven automation
-* Test-driven validation
-* Planning documentation alignment
+### Publishing Houses
+- Each **Publishing House** is managed by exactly one Editor
+- Journalists may submit articles:
+  - Independently
+  - OR under a specific Publishing House
 
----
+### Article Workflow
+1. Journalist submits article (selects publishing option)
+2. Article is marked as *pending approval*
+3. Editor sees only articles belonging to their publishing house
+4. Editor approves or rejects the article
+5. Approved articles become visible to readers
 
-## ✅ What to Add or Correct Next
 
-**Must Do**
 
-* Finish MariaDB/MySQL authentication setup
-* Run migrations on production database
-* Add screenshots for submission
-
-**Recommended**
-
-* Permission-based view tests
-* `.env.example` file
-* Deployment notes
-
-**Optional**
-
-* Diagram image (draw.io)
-* Pagination & search
-* Docker setup
-
----
-
-If you want, I can next:
-
-* ✅ Align this README exactly to your **bootcamp rubric**
-* 📸 Provide a **submission screenshot checklist**
-* 🧪 Add **advanced permission tests**
-* 🚀 Prepare a **deployment guide**
-
-Just say the word — you’re very close to final submission 👌

@@ -45,24 +45,13 @@ def create_user_groups(sender, **kwargs):
 
 
 @receiver(post_save, sender=CustomUser)
-def assign_user_group(sender, instance, created, **kwargs):
-    """Assign user to a group based on their role after creation."""
-    if not created:
-        return
-
-    group_map = {
-        'reader': 'Reader',
-        'editor': 'Editor',
-        'journalist': 'Journalist'
-    }
-
-    group_name = group_map.get(instance.role)
-    if group_name:
-        try:
-            group = Group.objects.get(name=group_name)
-            instance.groups.add(group)
-        except Group.DoesNotExist:
-            pass
+def assign_groups(sender, instance, created, **kwargs):
+    """Assign users to groups based on their role upon creation."""
+    if created:
+        if instance.role == "editor":
+            instance.is_staff = True
+            instance.is_active = False  # must be approved
+            instance.save()
 
 
 @receiver(post_save, sender=Article)
