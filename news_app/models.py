@@ -22,7 +22,12 @@ class CustomUser(AbstractUser):
         ("editor", "Editor"),
     )
 
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        null=False,
+        blank=False,
+        )
 
     publishing_house = models.ForeignKey(
         PublishingHouse,

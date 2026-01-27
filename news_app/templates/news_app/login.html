@@ -15,25 +15,26 @@
 
     <div class="mb-3">
         <label for="username" class="form-label">Username</label>
-        <input type="text" class="form-control" id="username" name="username" required>
+        <input
+            type="text"
+            class="form-control"
+            id="username"
+            name="username"
+            required
+        >
         <div class="invalid-feedback">Enter your username.</div>
     </div>
 
     <div class="mb-3">
         <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" name="password" required>
+        <input
+            type="password"
+            class="form-control"
+            id="password"
+            name="password"
+            required
+        >
         <div class="invalid-feedback">Enter your password.</div>
-    </div>
-
-    <div class="mb-3">
-        <label for="role" class="form-label">Select Role</label>
-        <select class="form-select" id="role" name="role" required>
-            <option value="">-- Choose Role --</option>
-            <option value="journalist">Journalist</option>
-            <option value="editor">Editor</option>
-            <option value="reader">Reader</option>
-        </select>
-        <div class="invalid-feedback">Select your role.</div>
     </div>
 
     <button type="submit" class="btn btn-primary">Login</button>
@@ -56,4 +57,3 @@
     })();
 </script>
 {% endblock %}
-

@@ -8,20 +8,25 @@ from .models import Article, PublishingHouse
 
 class UserRegisterForm(forms.ModelForm):
     """Form for registering a new user with role selection"""
-    password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
-    password2 = forms.CharField(label="Confirm Password",
-                                widget=forms.PasswordInput)
+
+    password1 = forms.CharField(
+        label="Password",
+        widget=forms.PasswordInput
+    )
+    password2 = forms.CharField(
+        label="Confirm Password",
+        widget=forms.PasswordInput
+    )
+
+    role = forms.ChoiceField(
+        choices=CustomUser.ROLE_CHOICES,
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
 
     class Meta:
         """Meta class for UserRegisterForm."""
         model = CustomUser
         fields = ['username', 'email', 'role', 'password1', 'password2']
-
-    def __init__(self, *args, current_user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Only superusers can see/select the role field
-        if not current_user or not current_user.is_superuser:
-            self.fields.pop('role')  # remove role field for normal users
 
     def clean(self):
         cleaned_data = super().clean()

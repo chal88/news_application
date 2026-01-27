@@ -1,11 +1,43 @@
 {% extends "news_app/base.html" %}
+
 {% block content %}
 <div class="container mt-4">
-  <h2>Register</h2>
-  <form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit"class="btn btn-primary">Register</button>
-  </form>
+    <h2 class="mb-4">Register</h2>
+
+    <form method="POST" class="needs-validation" novalidate>
+        {% csrf_token %}
+
+        <!-- Username -->
+        <div class="mb-3">
+            <label class="form-label">Username</label>
+            {{ form.username }}
+        </div>
+
+        <!-- Email -->
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            {{ form.email }}
+        </div>
+
+        <!-- Role Selection -->
+        <div class="mb-3">
+            <label class="form-label">Select Role</label>
+            {{ form.role }}
+        </div>
+
+        <!-- Password -->
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            {{ form.password1 }}
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="mb-3">
+            <label class="form-label">Confirm Password</label>
+            {{ form.password2 }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Register</button>
+    </form>
 </div>
 {% endblock %}
