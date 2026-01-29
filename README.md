@@ -1,3 +1,6 @@
+Project News Application 
+
+Django News Application — role-based article workflow
 
 This version:
 
@@ -21,6 +24,75 @@ This is a **Django-based News Application** that supports multiple user roles, a
 It is designed for learning full-stack development concepts such as **authentication, permissions, workflows, signals, and external API integration**.
 
 ---
+The manage.py file is located in the project root at
+news_project/news_application/manage.py.
+It serves as the main command-line utility for managing the Django project, including running the development server, applying database migrations, creating superusers, and executing administrative tasks.
+
+---
+## Database Configuration (MariaDB Requirement)
+
+This application uses MariaDB when running in production mode.
+
+By default, the project runs in development mode using SQLite.
+To enable MariaDB, you MUST set the environment variable below:
+
+```bash
+export DJANGO_ENV=production
+
+1. Install MariaDB
+sudo apt update
+sudo apt install mariadb-server mariadb-client
+
+2. Login
+sudo mariadb
+
+3. Create database
+CREATE DATABASE news_db;
+
+4. Create database user
+CREATE USER 'news_user'@'localhost' IDENTIFIED BY 'strongpassword';
+
+5. Grant database permissions
+GRANT ALL PRIVILEGES ON news_db.* TO 'news_user'@'localhost';
+FLUSH PRIVILEGES;
+
+6. Set required Environmental variables
+export DJANGO_ENV=production
+export DB_NAME=news_db
+export DB_USER=news_user
+export DB_PASSWORD=strongpassword
+export DB_HOST=127.0.0.1
+export DB_PORT=3306
+
+7. Apply Database migrations 
+python manage.py migrate
+
+## User Registration & Login
+
+Users can register themselves only as **Reader** or **Journalist**.  
+After registering, users can log in using their credentials.
+
+## Editor Account Creation (ADMIN ONLY)
+
+Editors cannot self-register through the registration page.
+
+Steps to create an Editor:
+
+1. Log in to Django Admin
+2. Click on Users
+3. Click Add User
+4. Enter username and password
+5. Save the user
+6. Edit the newly created user
+7. Set the following fields:
+   - role = editor
+   - is_staff = True
+   - is_active = True
+8. Assign the user to a Publishing House
+9. Save changes
+
+Only users created using this process will have Editor permissions.
+
 
 ### Models
 
@@ -345,9 +417,13 @@ venv\Scripts\activate      # Windows
 
 ### 3️⃣ Install Dependencies
 
+Before running the project, install the required Python packages.
+
+From the **news_application/news_project/** folder (where `manage.py` is located), run:
+
 ```bash
 pip install -r requirements.txt
-```
+
 
 ---
 

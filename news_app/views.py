@@ -16,20 +16,16 @@ from .forms import UserRegisterForm, ArticleForm
 
 
 def register(request):
-    """Handle user registration and set role during registration."""
-    if request.method == 'POST':
+    """Register a new user (reader or journalist)."""
+    if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
 
-            # Optional safety defaults
+            # IMPORTANT: hash password correctly
+            user.set_password(form.cleaned_data["password1"])
             user.is_active = True
-
-            # IMPORTANT: staff status depends on role
-            if user.role == "editor":
-                user.is_staff = True
-            else:
-                user.is_staff = False
+            user.is_staff = False  # readers & journalists only
 
             user.save()
 
@@ -37,11 +33,11 @@ def register(request):
                 request,
                 "Account created successfully. You can now log in."
             )
-            return redirect('login')
+            return redirect("login")
     else:
         form = UserRegisterForm()
 
-    return render(request, 'news_app/register.html', {'form': form})
+    return render(request, "news_app/register.html", {"form": form})
 
 
 def home(request):

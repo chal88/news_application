@@ -15,13 +15,12 @@ Journalist ─────────▶ Register Account
 Journalist ─────────▶ Login
 Journalist ─────────▶ Submit Article
 Journalist ─────────▶ Edit Own Article
-Journalist ─────────▶ View Article Status
 
 Editor ─────────────▶ Login
 Editor ─────────────▶ View Pending Articles
 Editor ─────────────▶ Approve Article
-Editor ─────────────▶ Reject Article
-Editor ─────────────▶ Edit Any Article
+Editor ─────────────▶ Update
+Editor ─────────────▶ Delete
 
 Approve Article ────▶ Trigger Notifications
 
