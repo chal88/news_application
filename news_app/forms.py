@@ -5,6 +5,7 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser
 from .models import Article, PublishingHouse
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import Group
 
 
 class UserRegisterForm(forms.ModelForm):
@@ -77,6 +78,12 @@ class UserRegisterForm(forms.ModelForm):
         user = super().save(commit=False)
         # Set the password properly
         user.set_password(self.cleaned_data["password1"])
+
+        # Assign group based on role
+        role = self.cleaned_data.get("role")
+        group, _ = Group.objects.get_or_create(name=role.capitalize())
+        user.save()
+        user.groups.add(group)
 
         publishing_house = self.cleaned_data.get("publishing_house")
         new_publishing_house = self.cleaned_data.get("new_publishing_house")
