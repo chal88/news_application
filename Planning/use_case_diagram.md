@@ -13,7 +13,8 @@ Reader ─────────────▶ Receive Email Notifications
 
 Journalist ─────────▶ Register Account
 Journalist ─────────▶ Login
-Journalist ─────────▶ Submit Article
+Journalist ─────────▶ create and Submit Article
+Journalist ─────────▶ Create and Submit Newsletter
 Journalist ─────────▶ Edit Own Article
 
 Editor ─────────────▶ Login
@@ -21,6 +22,10 @@ Editor ─────────────▶ View Pending Articles
 Editor ─────────────▶ Approve Article
 Editor ─────────────▶ Update
 Editor ─────────────▶ Delete
+
+Admin(Superuser) ─────────▶ Create Editor
+Admin(Superuser) ─────────▶ Create Publishing house
+Admin(Superuser) ─────────▶ Assign Editor to Publishing House
 
 Approve Article ────▶ Trigger Notifications
 

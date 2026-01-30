@@ -139,6 +139,12 @@ def approve_article(request, article_id):
     return redirect("editor_dashboard")
 
 
+@login_required
+def create_newsletter(request):
+    """Create a newsletter (editors only)."""
+    from .models import Newsletter  # local import avoids circular import
+    ...
+
 # -------------------------
 # JOURNALIST VIEWS
 # -------------------------

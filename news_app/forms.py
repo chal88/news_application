@@ -4,13 +4,14 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser
 from .models import Article, PublishingHouse
+from django.contrib.auth.hashers import make_password
 
-
-from django import forms
-from .models import CustomUser
 
 class UserRegisterForm(forms.ModelForm):
-    """Form for registering Reader and Journalist users only"""
+    """
+    Public registration form for Reader and Journalist users only.
+    Editors are created by Admin.
+    """
 
     password1 = forms.CharField(
         label="Password",
@@ -28,15 +29,51 @@ class UserRegisterForm(forms.ModelForm):
         ]
     )
 
+    publishing_house = forms.ModelChoiceField(
+        queryset=PublishingHouse.objects.all(),
+        required=False,
+        empty_label="Select Publishing House (Journalists only)"
+    )
+
     class Meta:
+        """Meta class for UserRegisterForm."""
         model = CustomUser
-        fields = ["username", "email", "role", "password1", "password2"]
+        fields = [
+            "username",
+            "email",
+            "role",
+            "publishing_house",
+            "password1",
+            "password2",
+        ]
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data.get("password1") != cleaned_data.get("password2"):
+
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+        role = cleaned_data.get("role")
+        publishing_house = cleaned_data.get("publishing_house")
+
+        if password1 != password2:
             raise forms.ValidationError("Passwords do not match")
+
+        if role == "journalist" and not publishing_house:
+            raise forms.ValidationError(
+                "Journalists must select a publishing house."
+            )
+
         return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.password = make_password(self.cleaned_data["password1"])
+        user.is_active = True
+
+        if commit:
+            user.save()
+
+        return user
 
 
 class ArticleForm(forms.ModelForm):

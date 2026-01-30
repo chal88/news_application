@@ -1,73 +1,58 @@
-"""
-Admin configuration for the news application.
-"""
-
+"""Admin configurations for news_app models."""
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Article, PublishingHouse
+from .models import CustomUser, PublishingHouse, Article, Newsletter
 
-# ---------------------------------------
-# CUSTOM USER ADMIN
-# ---------------------------------------
-
-# Unregister first if already registered to avoid AlreadyRegistered error
-try:
-    admin.site.unregister(CustomUser)
-except admin.sites.NotRegistered:
-    pass
+# --------------------------------------
+# Register CustomUser
+# --------------------------------------
 
 
-class CustomUserAdmin(UserAdmin):
-    """Admin configuration for CustomUser model."""
-    model = CustomUser
-    list_display = ['username', 'email', 'role', 'is_active', 'is_staff',
-                    'is_superuser']
-    list_filter = ['role', 'is_staff', 'is_superuser', 'is_active']
-    search_fields = ['username', 'email']
-    ordering = ['username']
-    fieldsets = UserAdmin.fieldsets + (
-        ('Role Info', {'fields': ('role', 'publishing_house')}),
-    )
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Role Info', {'fields': ('role', 'publishing_house')}),
-    )
+@admin.register(CustomUser)
+class CustomUserAdmin(admin.ModelAdmin):
+    """Admin for CustomUser model."""
+    list_display = ("username", "email", "role", "publishing_house", "is_staff", "is_active")
+    list_filter = ("role", "is_staff", "is_active", "publishing_house")
+    search_fields = ("username", "email")
+    ordering = ("username",)
+    # prevent editing password here
+    readonly_fields = ("password",)
 
-# Register CustomUser with the admin site
+# --------------------------------------
+# Register PublishingHouse
+# --------------------------------------
 
 
-admin.site.register(CustomUser, CustomUserAdmin)
-
-# ---------------------------------------
-# ARTICLE ADMIN
-# ---------------------------------------
-
-
-class ArticleAdmin(admin.ModelAdmin):
-    """Admin configuration for Article model."""
-    list_display = ['title', 'journalist', 'approved', 'created_at',
-                    'publishing_house']
-    list_filter = ['approved', 'created_at', 'publishing_house']
-    search_fields = ['title', 'content', 'journalist__username']
-    ordering = ['-created_at']
-
-
-admin.site.register(Article, ArticleAdmin)
-
-# ---------------------------------------
-# PUBLISHING HOUSE ADMIN
-# ---------------------------------------
-
-
+@admin.register(PublishingHouse)
 class PublishingHouseAdmin(admin.ModelAdmin):
-    """Admin configuration for PublishingHouse model."""
-    list_display = ['name', 'get_editor_username']
-    search_fields = ['name', 'editor__username']
+    """Admin for PublishingHouse model."""
+    list_display = ("name",)
+    search_fields = ("name",)
+    ordering = ("name",)
 
-    def get_editor_username(self, obj):
-        """Return the username of the editor
-        associated with the publishing house."""
-        editor = obj.customuser_set.filter(role='editor').first()
-        return editor.username if editor else "-"
+# --------------------------------------
+# Register Article
+# --------------------------------------
 
 
-admin.site.register(PublishingHouse, PublishingHouseAdmin)
+@admin.register(Article)
+class ArticleAdmin(admin.ModelAdmin):
+    """Admin for Article model."""
+    list_display = ("title", "journalist", "publishing_house",
+                    "approved", "created_at")
+    list_filter = ("approved", "publishing_house")
+    search_fields = ("title", "content")
+    ordering = ("-created_at",)
+    readonly_fields = ("created_at",)
+
+# --------------------------------------
+# Register Newsletter
+# --------------------------------------
+
+
+@admin.register(Newsletter)
+class NewsletterAdmin(admin.ModelAdmin):
+    """Admin for Newsletter model."""
+    list_display = ("title", "author", "created_at")
+    search_fields = ("title", "content")
+    ordering = ("-created_at",)
+    readonly_fields = ("created_at",)

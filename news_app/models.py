@@ -69,8 +69,16 @@ class Article(models.Model):
         return str(self.title)
 
 
+class Newsletter(models.Model):
+    """Newsletter model for periodic updates."""
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    author = models.ForeignKey(
+        'CustomUser',
+        on_delete=models.CASCADE,
+        limit_choices_to={"role": "journalist"}
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
-
-from django.db import models
-
-
+    def __str__(self):
+        return str(self.title)
