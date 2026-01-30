@@ -44,14 +44,14 @@ def create_user_groups(sender, **kwargs):
                                       change_article, delete_article])
 
 
-@receiver(post_save, sender=CustomUser)
-def assign_groups(sender, instance, created, **kwargs):
-    """Assign users to groups based on their role upon creation."""
-    if created:
-        if instance.role == "editor":
-            instance.is_staff = True
-            instance.is_active = False  # must be approved
-            instance.save()
+# @receiver(post_save, sender=CustomUser)
+# def assign_groups(sender, instance, created, **kwargs):
+#     """Assign users to groups based on their role upon creation."""
+#     if created:
+#         if instance.role == "editor":
+#             instance.is_staff = True
+#             instance.is_active = False  # must be approved
+#             instance.save()
 
 
 @receiver(post_save, sender=Article)

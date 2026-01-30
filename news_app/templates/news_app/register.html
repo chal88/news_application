@@ -1,10 +1,15 @@
 {% extends "news_app/base.html" %}
+{% if form.errors %}
+  <div class="alert alert-danger">
+    {{ form.errors }}
+  </div>
+{% endif %}
 
 {% block content %}
 <div class="container mt-4">
     <h2 class="mb-4">Register</h2>
 
-    <form method="POST" class="needs-validation" novalidate>
+    <form method="POST">
         {% csrf_token %}
 
         <!-- Username -->
@@ -25,6 +30,18 @@
             {{ form.role }}
         </div>
 
+        <!-- Publishing House (hidden by default) -->
+        <div class="mb-3" id="publishing-house-section" style="display:none;">
+            <label class="form-label">Select Publishing House</label>
+            {{ form.publishing_house }}
+        </div>
+
+        <!-- Add New Publishing House -->
+        <div class="mb-3" id="new-publishing-house-section" style="display:none;">
+            <label class="form-label">Or Add New Publishing House</label>
+            {{ form.new_publishing_house }}
+        </div>
+
         <!-- Password -->
         <div class="mb-3">
             <label class="form-label">Password</label>
@@ -40,4 +57,23 @@
         <button type="submit" class="btn btn-primary">Register</button>
     </form>
 </div>
+
+<script>
+    const roleField = document.getElementById("id_role");
+    const publishingSection = document.getElementById("publishing-house-section");
+    const newPublishingSection = document.getElementById("new-publishing-house-section");
+
+    function togglePublishingHouseFields() {
+        if (roleField.value === "journalist" || roleField.value === "editor") {
+            publishingSection.style.display = "block";
+            newPublishingSection.style.display = "block";
+        } else {
+            publishingSection.style.display = "none";
+            newPublishingSection.style.display = "none";
+        }
+    }
+
+    roleField.addEventListener("change", togglePublishingHouseFields);
+    togglePublishingHouseFields();  // run on page load
+</script>
 {% endblock %}

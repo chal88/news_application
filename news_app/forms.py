@@ -9,8 +9,7 @@ from django.contrib.auth.hashers import make_password
 
 class UserRegisterForm(forms.ModelForm):
     """
-    Public registration form for Reader and Journalist users only.
-    Editors are created by Admin.
+    Public registration form for Reader, Journalist and editor users only.
     """
 
     password1 = forms.CharField(
@@ -26,13 +25,20 @@ class UserRegisterForm(forms.ModelForm):
         choices=[
             ("reader", "Reader"),
             ("journalist", "Journalist"),
+            ("editor", "Editor")
         ]
     )
 
     publishing_house = forms.ModelChoiceField(
         queryset=PublishingHouse.objects.all(),
         required=False,
-        empty_label="Select Publishing House (Journalists only)"
+        empty_label="Select Publishing House (Journalists and Editors only)",
+    )
+
+    new_publishing_house = forms.CharField(
+        required=False,
+        label="Or add a new Publishing House",
+        help_text="Only required if your publishing house is not listed"
     )
 
     class Meta:
@@ -43,6 +49,7 @@ class UserRegisterForm(forms.ModelForm):
             "email",
             "role",
             "publishing_house",
+            "new_publishing_house",
             "password1",
             "password2",
         ]
@@ -54,21 +61,31 @@ class UserRegisterForm(forms.ModelForm):
         password2 = cleaned_data.get("password2")
         role = cleaned_data.get("role")
         publishing_house = cleaned_data.get("publishing_house")
+        new_publishing_house = cleaned_data.get("new_publishing_house")
 
         if password1 != password2:
             raise forms.ValidationError("Passwords do not match")
 
-        if role == "journalist" and not publishing_house:
+        if role in ["journalist", "editor"] and not (publishing_house or new_publishing_house):
             raise forms.ValidationError(
-                "Journalists must select a publishing house."
+                "Journalists and editors must select a publishing house."
             )
 
         return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.password = make_password(self.cleaned_data["password1"])
-        user.is_active = True
+        # Set the password properly
+        user.set_password(self.cleaned_data["password1"])
+
+        publishing_house = self.cleaned_data.get("publishing_house")
+        new_publishing_house = self.cleaned_data.get("new_publishing_house")
+
+        if new_publishing_house:
+            publishing_house, _ = PublishingHouse.objects.get_or_create(
+                name=new_publishing_house
+            )
+            user.publishing_house = publishing_house
 
         if commit:
             user.save()

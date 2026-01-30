@@ -21,11 +21,13 @@ def register(request):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
+            print("User", user)
 
             # IMPORTANT: hash password correctly
             user.set_password(form.cleaned_data["password1"])
             user.is_active = True
             user.is_staff = False  # readers & journalists only
+            print(user.is_active)
 
             user.save()
 
@@ -148,6 +150,7 @@ def create_newsletter(request):
 # -------------------------
 # JOURNALIST VIEWS
 # -------------------------
+
 
 @login_required
 def journalist_dashboard(request):
