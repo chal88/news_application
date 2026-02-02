@@ -3,7 +3,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser
-from .models import Article, PublishingHouse
+from .models import Article, PublishingHouse, Newsletter
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import Group
 
@@ -26,7 +26,7 @@ class UserRegisterForm(forms.ModelForm):
         choices=[
             ("reader", "Reader"),
             ("journalist", "Journalist"),
-            ("editor", "Editor")
+            ("editor", "Editor"),
         ]
     )
 
@@ -67,7 +67,10 @@ class UserRegisterForm(forms.ModelForm):
         if password1 != password2:
             raise forms.ValidationError("Passwords do not match")
 
-        if role in ["journalist", "editor"] and not (publishing_house or new_publishing_house):
+        if (
+            role in ["journalist", "editor"]
+            and not (publishing_house or new_publishing_house)
+        ):
             raise forms.ValidationError(
                 "Journalists and editors must select a publishing house."
             )
@@ -76,28 +79,36 @@ class UserRegisterForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        # Set the password properly
+
+        # Set password correctly
         user.set_password(self.cleaned_data["password1"])
 
-        # Assign group based on role
         role = self.cleaned_data.get("role")
-        group, _ = Group.objects.get_or_create(name=role.capitalize())
-        user.save()
-        user.groups.add(group)
-
         publishing_house = self.cleaned_data.get("publishing_house")
         new_publishing_house = self.cleaned_data.get("new_publishing_house")
 
+        # If user entered a new publishing house, create it
         if new_publishing_house:
             publishing_house, _ = PublishingHouse.objects.get_or_create(
-                name=new_publishing_house
+                name=new_publishing_house.strip()
             )
+
+        # Assign publishing house ONLY to journalist/editor
+        if role in ["journalist", "editor"]:
             user.publishing_house = publishing_house
 
         if commit:
             user.save()
 
         return user
+
+
+class NewsletterForm(forms.ModelForm):
+    """Form for creating or updating a newsletter."""
+    class Meta:
+        """Meta class for NewsletterForm."""
+        model = Newsletter
+        fields = ["title", "content"]
 
 
 class ArticleForm(forms.ModelForm):
@@ -113,4 +124,3 @@ class ArticleForm(forms.ModelForm):
         """Meta class for ArticleForm."""
         model = Article
         fields = ["title", "content", "publishing_house"]
-

@@ -69,29 +69,79 @@ python manage.py migrate
 
 ## User Registration & Login
 
-Users can register themselves only as **Reader** or **Journalist**.  
+Users can register themselves as **Reader** or **Journalist**. Editors not created through public registration page. 
 After registering, users can log in using their credentials.
 
-## Editor Account Creation (ADMIN ONLY)
+During registration:
+Journalists  must select an existing Publishing House or create a new one.
+Readers do not select a Publishing House.
 
-Editors cannot self-register through the registration page.
+👥 User Roles & Permissions
+Reader:
+   Can view approved articles and newsletters only.
+   Cannot create or manage content.
+
+Jpurnalists:
+Newsletter Management
+
+The application includes a Newsletter feature that allows journalists to communicate updates and announcements to readers within their publishing house.
+Journalist Capabilities:
+*Journalists can create newsletters from their dashboard.
+*Each newsletter is automatically linked to:
+   *the logged-in journalist
+   *the journalist’s publishing house
+*Only authenticated users with the Journalist role can create newsletters.
+ How to Create a Newsletter:
+   1. Log in as a Journalist
+   2. Navigate to the Journalist Dashboard
+   3. Click “Create Newsletter”
+   4. Complete the newsletter form and submit
+
+This functionality ensures the application reflects real-world newsroom workflows and fulfills the journalist responsibility requirements of the task.
+
+Creating Editors :
 
 Steps to create an Editor:
+Editors do not self-register.
 
-1. Log in to Django Admin
-2. Click on Users
-3. Click Add User
-4. Enter username and password
-5. Save the user
-6. Edit the newly created user
-7. Set the following fields:
-   - role = editor
-   - is_staff = True
-   - is_active = True
-8. Assign the user to a Publishing House
-9. Save changes
+Creating an Editor Account by:
+Logging in to the Django Admin panel (/admin) as a superuser.
+Navigate to: Users → Add User.
+Fill in:
+Username
+Email
+Password
+Set the following fields:
+Role: editor
+is_staff: True (required to access the admin panel)
+(Optional) Assign a Publishing House
+Save the user.
+✅ The editor can now log in with these credentials.
 
 Only users created using this process will have Editor permissions.
+
+2️⃣ Accessing the Application
+Log in using the standard login page on the frontend.
+After login, the editor is redirected to the Editor Dashboard.
+The Editor Dashboard is informational only: it shows pending articles and newsletters but does not allow approval from the frontend.
+3️⃣ Approving Articles & Newsletters
+All content approval happens in the Django Admin panel (/admin).
+Editors use the same username and password to log in to the admin site.
+They can then:
+Review pending articles
+Approve or reject articles
+Review and approve newsletters
+Only users with is_staff = True can access this panel.
+4️⃣ Security & Best Practices
+Editors cannot grant themselves admin access.
+Superusers control who can become an editor.
+Editors do not have superuser privileges—they can only manage content according to their role.
+
+🔐 Why Django Admin Is Used for Approval
+Ensures secure and controlled access
+Prevents self-approval of content
+Clearly separates content creation and moderation
+Aligns with real-world publishing workflows
 
 
 ### Models
@@ -175,32 +225,7 @@ X_BEARER_TOKEN=your_bearer_token
 ## 🧭 Use Case Diagram (Planning)
 
 The use case diagram is stored in:
-
-```
-Planning/use_case_diagram.md
-```
-
-### Actors and Interactions
-
-```
-Reader ─────────────▶ View Approved Articles
-Reader ─────────────▶ Read Full Article
-Reader ─────────────▶ Receive Email Notifications
-
-Journalist ─────────▶ Register
-Journalist ─────────▶ Login
-Journalist ─────────▶ Submit Article
-Journalist ─────────▶ Edit Own Article
-Journalist ─────────▶ View Article Status
-
-Editor ─────────────▶ Login
-Editor ─────────────▶ View Pending Articles
-Editor ─────────────▶ Approve Article
-Editor ─────────────▶ Reject Article
-Editor ─────────────▶ Edit Any Article
-
-Approve Article ────▶ Trigger Notifications
-```
+news_project/Use Case Diagram News App.jpg
 
 This diagram was used to **plan application logic and unit tests**.
 

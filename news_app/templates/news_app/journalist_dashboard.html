@@ -1,32 +1,51 @@
 
-{% extends 'news_app/base.html' %}
-{% block title %}My Articles{% endblock %}
+{% extends "news_app/base.html" %}
+
+{% block title %}Journalist Dashboard{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">My Submitted Articles</h2>
+<div class="container mt-4">
+    <h2 class="mb-4">Journalist Dashboard</h2>
 
-<a href="{% url 'submit_article' %}" class="btn btn-success mb-3">Submit New Article</a>
+    <!-- Action buttons -->
+    <div class="mb-4">
+        <a href="{% url 'submit_article' %}" class="btn btn-success me-2">
+            Submit New Article
+        </a>
+        <a href="{% url 'create_newsletter' %}" class="btn btn-primary">
+            Create Newsletter
+        </a>
+    </div>
 
-<div class="row">
-    {% for article in articles %}
-        <div class="col-md-6 col-lg-4">
-            <div class="card {% if not article.approved %}border-warning{% else %}border-success{% endif %}">
-                <div class="card-body">
-                    <h5 class="card-title">{{ article.title }}</h5>
-                    <p class="card-text">{{ article.content|truncatechars:150 }}</p>
-                    <p>
-                        <strong>Status:</strong> 
-                        {% if article.approved %}
-                            <span class="text-success">Approved</span>
-                        {% else %}
-                            <span class="text-warning">Pending Approval</span>
-                        {% endif %}
-                    </p>
-                </div>
+    <h4 class="mb-3">My Submitted Articles</h4>
+
+    <div class="row">
+        {% for article in articles %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                {% if article.approved %}
+                    <div class="card h-100 border-success">
+                {% else %}
+                    <div class="card h-100 border-warning">
+                {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ article.title }}</h5>
+                            <p class="card-text">
+                                {{ article.content|truncatechars:150 }}
+                            </p>
+                            <p class="mt-2">
+                                <strong>Status:</strong>
+                                {% if article.approved %}
+                                    <span class="text-success">Approved</span>
+                                {% else %}
+                                    <span class="text-warning">Pending Approval</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
             </div>
-        </div>
-    {% empty %}
-        <p>You haven't submitted any articles yet.</p>
-    {% endfor %}
+        {% empty %}
+            <p>You haven't submitted any articles yet.</p>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

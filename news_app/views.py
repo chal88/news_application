@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from news_app.models import Article
 from .forms import UserRegisterForm, ArticleForm
+from .forms import NewsletterForm
 
 # -------------------------
 # REGISTRATION VIEW
@@ -67,13 +68,15 @@ def user_login(request):
 
         login(request, user)
 
-        # 🔑 ROLE-BASED REDIRECT (automatic)
-        if user.role == "journalist":
-            return redirect("journalist_dashboard")
-        elif user.role == "editor":
+        # ROLE-BASED REDIRECT
+        if user.role == "editor":
             return redirect("editor_dashboard")
+        elif user.role == "journalist":
+            return redirect("journalist_dashboard")
         else:
             return redirect("article_list")
+    else:
+        messages.error(request, "Invalid username or password.")
 
     return render(request, "news_app/login.html")
 
@@ -91,7 +94,7 @@ def user_logout(request):
 
 def article_list(request):
     """List approved articles for readers."""
-    articles = Article.objects.filter(approved=True)
+    articles = Article.objects.filter(approved=True)  # type: ignore[attr-defined]  # pylint: disable=no-member
     return render(
         request,
         "news_app/article_list.html",
@@ -111,7 +114,7 @@ def editor_dashboard(request):
 
     publishing_house = request.user.publishing_house
 
-    articles = Article.objects.filter(
+    articles = Article.objects.filter(  # type: ignore[attr-defined]  # pylint: disable=no-member
         approved=False,
         publishing_house=publishing_house
     )
@@ -143,9 +146,23 @@ def approve_article(request, article_id):
 
 @login_required
 def create_newsletter(request):
-    """Create a newsletter (editors only)."""
-    from .models import Newsletter  # local import avoids circular import
-    ...
+    """Create a newsletter (journalist only)."""
+    if request.user.role != "journalist":
+        return redirect("article_list")
+
+    if request.method == "POST":
+        form = NewsletterForm(request.POST)
+        if form.is_valid():
+            newsletter = form.save(commit=False)
+            newsletter.journalist = request.user
+            newsletter.publishing_house = request.user.publishing_house
+            newsletter.save()
+            return redirect("journalist_dashboard")
+    else:
+        form = NewsletterForm()
+
+    return render(request, "news_app/create_newsletter.html", {"form": form})
+
 
 # -------------------------
 # JOURNALIST VIEWS
@@ -158,7 +175,7 @@ def journalist_dashboard(request):
     if request.user.role != "journalist":
         raise PermissionDenied
 
-    articles = Article.objects.filter(journalist=request.user)
+    articles = Article.objects.filter(journalist=request.user)  # type: ignore[attr-defined]  # pylint: disable=no-member
     return render(
         request,
         "news_app/journalist_dashboard.html",

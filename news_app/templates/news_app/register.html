@@ -1,13 +1,15 @@
 {% extends "news_app/base.html" %}
-{% if form.errors %}
-  <div class="alert alert-danger">
-    {{ form.errors }}
-  </div>
-{% endif %}
 
 {% block content %}
 <div class="container mt-4">
     <h2 class="mb-4">Register</h2>
+
+    <!-- Display form errors -->
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            {{ form.errors }}
+        </div>
+    {% endif %}
 
     <form method="POST">
         {% csrf_token %}
@@ -30,7 +32,7 @@
             {{ form.role }}
         </div>
 
-        <!-- Publishing House (hidden by default) -->
+        <!-- Publishing House (shown for Journalist & Editor only) -->
         <div class="mb-3" id="publishing-house-section" style="display:none;">
             <label class="form-label">Select Publishing House</label>
             {{ form.publishing_house }}
@@ -64,7 +66,7 @@
     const newPublishingSection = document.getElementById("new-publishing-house-section");
 
     function togglePublishingHouseFields() {
-        if (roleField.value === "journalist" || roleField.value === "editor") {
+        if (roleField && (roleField.value === "journalist" || roleField.value === "editor")) {
             publishingSection.style.display = "block";
             newPublishingSection.style.display = "block";
         } else {
@@ -73,7 +75,9 @@
         }
     }
 
-    roleField.addEventListener("change", togglePublishingHouseFields);
-    togglePublishingHouseFields();  // run on page load
+    if (roleField) {
+        roleField.addEventListener("change", togglePublishingHouseFields);
+        togglePublishingHouseFields(); // run on page load
+    }
 </script>
 {% endblock %}

@@ -4,7 +4,14 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-4">📝 Articles Pending Approval</h2>
+    <h2 class="mb-4">📝 Articles Pending Review</h2>
+
+    <div class="alert alert-info">
+        <strong>Editor Notice:</strong><br>
+        Articles are approved and managed through the
+        <a href="/admin/" target="_blank">Django Admin Panel</a>.
+        Please ensure you have been granted staff access by an administrator.
+    </div>
 
     <div class="row">
         {% for article in articles %}
@@ -22,19 +29,16 @@
                         </p>
 
                         <div class="mt-auto">
-                            <a
-                                href="{% url 'approve_article' article.id %}"
-                                class="btn btn-success btn-sm"
-                            >
-                                ✅ Approve
-                            </a>
+                            <span class="badge bg-warning text-dark">
+                                Pending Approval
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
         {% empty %}
             <div class="col-12">
-                <div class="alert alert-info">
+                <div class="alert alert-secondary">
                     No pending articles at the moment.
                 </div>
             </div>
@@ -42,4 +46,3 @@
     </div>
 </div>
 {% endblock %}
-

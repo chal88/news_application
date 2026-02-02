@@ -29,7 +29,8 @@ urlpatterns = [
         "articles/<int:article_id>/",
         article_detail,
         name="article_detail"),
+    path("newsletter/create/", views.create_newsletter,
+         name="create_newsletter"),
     path('register/', views.register, name='register'),
-
 
 ]
