@@ -47,7 +47,7 @@ class Article(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
 
-    journalist = models.ForeignKey(
+    author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         limit_choices_to={"role": "journalist"},

@@ -64,7 +64,7 @@ def notify_on_article_approval(sender, instance, created, **kwargs):
         role='reader'
     ).filter(
         models.Q(subscribed_publishers=instance.publisher) |
-        models.Q(subscribed_journalists=instance.journalist)
+        models.Q(subscribed_authors=instance.author)
     ).distinct()
 
     email_list = [user.email for user in subscribed_readers if user.email]
@@ -76,7 +76,7 @@ def notify_on_article_approval(sender, instance, created, **kwargs):
 A new article has been published.
 
 Title: {instance.title}
-Author: {instance.journalist.username}
+Author: {instance.author.username}
 
 {instance.content[:300]}...
 """,

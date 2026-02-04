@@ -56,11 +56,11 @@ class ArticleWorkflowTest(TestCase):
         article = Article.objects.create(
             title='Test Article',
             content='Article content',
-            journalist=self.journalist,
+            author=self.journalist,
             approved=False
         )
 
-        self.assertEqual(article.journalist, self.journalist)
+        self.assertEqual(article.author, self.journalist)
         self.assertFalse(article.approved)
 
     def test_editor_can_approve_article(self):
@@ -68,7 +68,7 @@ class ArticleWorkflowTest(TestCase):
         article = Article.objects.create(
             title='Pending Article',
             content='Pending content',
-            journalist=self.journalist,
+            author=self.journalist,
             approved=False
         )
 

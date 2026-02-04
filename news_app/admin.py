@@ -10,7 +10,8 @@ from .models import CustomUser, PublishingHouse, Article, Newsletter
 @admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
     """Admin for CustomUser model."""
-    list_display = ("username", "email", "role", "publishing_house", "is_staff", "is_active")
+    list_display = ("username", "email", "role", "publishing_house",
+                    "is_staff", "is_active")
     list_filter = ("role", "is_staff", "is_active", "publishing_house")
     search_fields = ("username", "email")
     ordering = ("username",)
@@ -37,7 +38,7 @@ class PublishingHouseAdmin(admin.ModelAdmin):
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
     """Admin for Article model."""
-    list_display = ("title", "journalist", "publishing_house",
+    list_display = ("title", "author", "publishing_house",
                     "approved", "created_at")
     list_filter = ("approved", "publishing_house")
     search_fields = ("title", "content")

@@ -31,6 +31,14 @@ urlpatterns = [
         name="article_detail"),
     path("newsletter/create/", views.create_newsletter,
          name="create_newsletter"),
+    path("newsletter/<int:newsletter_id>/edit/", views.edit_newsletter,
+         name="edit_newsletter"),
+    path("newsletter/<int:newsletter_id>/delete/", views.delete_newsletter,
+         name="delete_newsletter"),
+    path("article/<int:article_id>/edit/", views.edit_article,
+         name="edit_article"),
+    path("article/<int:article_id>/delete/", views.delete_article,
+         name="delete_article"),
     path('register/', views.register, name='register'),
 
 ]

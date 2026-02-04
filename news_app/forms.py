@@ -9,9 +9,7 @@ from django.contrib.auth.models import Group
 
 
 class UserRegisterForm(forms.ModelForm):
-    """
-    Public registration form for Reader, Journalist and editor users only.
-    """
+    """Form for registering Reader and Journalist users only"""
 
     password1 = forms.CharField(
         label="Password",
@@ -26,31 +24,27 @@ class UserRegisterForm(forms.ModelForm):
         choices=[
             ("reader", "Reader"),
             ("journalist", "Journalist"),
-            ("editor", "Editor"),
         ]
     )
 
     publishing_house = forms.ModelChoiceField(
         queryset=PublishingHouse.objects.all(),
         required=False,
-        empty_label="Select Publishing House (Journalists and Editors only)",
+        empty_label="Select Publishing House (Journalists only)"
     )
 
     new_publishing_house = forms.CharField(
         required=False,
-        label="Or add a new Publishing House",
-        help_text="Only required if your publishing house is not listed"
+        label="Or add new publishing house"
     )
 
     class Meta:
-        """Meta class for UserRegisterForm."""
         model = CustomUser
         fields = [
             "username",
             "email",
             "role",
             "publishing_house",
-            "new_publishing_house",
             "password1",
             "password2",
         ]
@@ -67,12 +61,9 @@ class UserRegisterForm(forms.ModelForm):
         if password1 != password2:
             raise forms.ValidationError("Passwords do not match")
 
-        if (
-            role in ["journalist", "editor"]
-            and not (publishing_house or new_publishing_house)
-        ):
+        if role == "journalist" and not publishing_house and not new_publishing_house:
             raise forms.ValidationError(
-                "Journalists and editors must select a publishing house."
+                "Journalists must select or create a publishing house."
             )
 
         return cleaned_data
@@ -80,22 +71,18 @@ class UserRegisterForm(forms.ModelForm):
     def save(self, commit=True):
         user = super().save(commit=False)
 
-        # Set password correctly
+        # ✅ IMPORTANT: hash password correctly
         user.set_password(self.cleaned_data["password1"])
 
-        role = self.cleaned_data.get("role")
-        publishing_house = self.cleaned_data.get("publishing_house")
-        new_publishing_house = self.cleaned_data.get("new_publishing_house")
-
-        # If user entered a new publishing house, create it
-        if new_publishing_house:
+        # Handle publishing house creation
+        new_ph_name = self.cleaned_data.get("new_publishing_house")
+        if new_ph_name:
             publishing_house, _ = PublishingHouse.objects.get_or_create(
-                name=new_publishing_house.strip()
+                name=new_ph_name
             )
-
-        # Assign publishing house ONLY to journalist/editor
-        if role in ["journalist", "editor"]:
             user.publishing_house = publishing_house
+        else:
+            user.publishing_house = self.cleaned_data.get("publishing_house")
 
         if commit:
             user.save()

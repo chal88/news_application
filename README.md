@@ -81,21 +81,29 @@ Reader:
    Can view approved articles and newsletters only.
    Cannot create or manage content.
 
-Jpurnalists:
-Newsletter Management
+Journalists:
+Newsletter and Article Management
 
-The application includes a Newsletter feature that allows journalists to communicate updates and announcements to readers within their publishing house.
+The application includes a Newsletter and article feature that allows journalists to communicate updates and announcements to readers within their publishing house.
+
 Journalist Capabilities:
-*Journalists can create newsletters from their dashboard.
-*Each newsletter is automatically linked to:
+*Journalists can create newsletters and articles from their dashboard.
+*Each newsletter and article is automatically linked to:
    *the logged-in journalist
    *the journalist’s publishing house
-*Only authenticated users with the Journalist role can create newsletters.
+*Only authenticated users with the Journalist role can create articles or newsletters.
  How to Create a Newsletter:
    1. Log in as a Journalist
    2. Navigate to the Journalist Dashboard
-   3. Click “Create Newsletter”
-   4. Complete the newsletter form and submit
+   3. Click “Create Newsletter” or "Create article"
+   4. Complete the newsletter or article form and submit
+
+   Journalist Permissions:
+   Journalists have full CRUD (Create, Read, Update, Delete) access to:
+      * Articles
+      * Newsletters
+      * edit or delete option 
+      * Editing an approved article or newsletter automatically resets its approval status and requires re-approval by an editor  via the Django Admin
 
 This functionality ensures the application reflects real-world newsroom workflows and fulfills the journalist responsibility requirements of the task.
 
@@ -124,6 +132,7 @@ Only users created using this process will have Editor permissions.
 Log in using the standard login page on the frontend.
 After login, the editor is redirected to the Editor Dashboard.
 The Editor Dashboard is informational only: it shows pending articles and newsletters but does not allow approval from the frontend.
+
 3️⃣ Approving Articles & Newsletters
 All content approval happens in the Django Admin panel (/admin).
 Editors use the same username and password to log in to the admin site.
@@ -132,6 +141,7 @@ Review pending articles
 Approve or reject articles
 Review and approve newsletters
 Only users with is_staff = True can access this panel.
+
 4️⃣ Security & Best Practices
 Editors cannot grant themselves admin access.
 Superusers control who can become an editor.
