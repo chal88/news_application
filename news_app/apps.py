@@ -4,7 +4,7 @@ from django.apps import AppConfig
 
 class NewsAppConfig(AppConfig):
     """
-    Docstring for NewsAppConfig
+    AppConfig for the News Application, handlingsetup and configuration.
     """
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'news_app'

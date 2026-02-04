@@ -9,7 +9,10 @@ from django.contrib.auth.models import Group
 
 
 class UserRegisterForm(forms.ModelForm):
-    """Form for registering Reader and Journalist users only"""
+    """Form for handling registering Reader and Journalist users only
+    This form includes fields for username, email, password, role,
+    and publishing house (for journalists).
+    """
 
     password1 = forms.CharField(
         label="Password",
@@ -39,6 +42,10 @@ class UserRegisterForm(forms.ModelForm):
     )
 
     class Meta:
+        """Configuration for UserRegisterForm.
+        Connects the form to CustomUser model and specifies the
+        exact fields to be rendered and validated.
+        """
         model = CustomUser
         fields = [
             "username",
@@ -50,6 +57,10 @@ class UserRegisterForm(forms.ModelForm):
         ]
 
     def clean(self):
+        """Custom validation for the form fields.
+        Ensures password match and publishing house selection
+        for journalists.
+        """
         cleaned_data = super().clean()
 
         password1 = cleaned_data.get("password1")
@@ -69,6 +80,9 @@ class UserRegisterForm(forms.ModelForm):
         return cleaned_data
 
     def save(self, commit=True):
+        """Override save method to handle password hashing
+        and publishing house assignment.
+        """
         user = super().save(commit=False)
 
         # ✅ IMPORTANT: hash password correctly
@@ -91,7 +105,9 @@ class UserRegisterForm(forms.ModelForm):
 
 
 class NewsletterForm(forms.ModelForm):
-    """Form for creating or updating a newsletter."""
+    """Form to handle creating and updating newsletters, allowing users
+    to specify title and content.
+    """
     class Meta:
         """Meta class for NewsletterForm."""
         model = Newsletter
@@ -99,7 +115,7 @@ class NewsletterForm(forms.ModelForm):
 
 
 class ArticleForm(forms.ModelForm):
-    """Form for creating or updating an article with 
+    """Form for creating or updating an article with
     optional publishing house selection."""
     publishing_house = forms.ModelChoiceField(
         queryset=PublishingHouse.objects.all(),
@@ -108,6 +124,8 @@ class ArticleForm(forms.ModelForm):
     )
 
     class Meta:
-        """Meta class for ArticleForm."""
+        """Configuration for ArticleForm to specify fields of title,
+        content, and publishing house.
+        """
         model = Article
         fields = ["title", "content", "publishing_house"]

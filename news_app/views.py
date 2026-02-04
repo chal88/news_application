@@ -12,23 +12,35 @@ from .forms import UserRegisterForm, ArticleForm
 from .forms import NewsletterForm, Newsletter
 from .models import CustomUser, PublishingHouse
 
-# -------------------------
-# REGISTRATION VIEW
-# -------------------------
-
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth import login, logout, authenticate
-from .forms import UserRegisterForm
-from .models import CustomUser, PublishingHouse
-
 
 # -------------------------------------------
 # REGISTER VIEW
 # -------------------------------------------
 def register(request):
-    """Register a new user (Reader or Journalist)."""
+    """Register a new user (Reader or Journalist)
+    with optional publishing house association.
+        - Journalists can create articles and newsletters.
+        - Readers can only view approved articles.
+        - Editors are created by admins and cannot register here.
+        - Users can optionally create or join a publishing house
+        during registration.
+        - After registration, users are auto-logged in and
+        redirected based on their role.
+        - Proper password hashing and form validation are implemented.
+        - Success messages are shown upon successful registration and login.
+        - No redirection to login page after registration; users go directly
+        to their dashboard or article list.
+        - Editors must be created by admins; they cannot register through
+        this form.
+        - The form handles both creating a new publishing house or selecting
+        an existing one.
+        - User roles are determined by the form input, and appropriate
+        permissions are set.
+        - The view ensures that only valid data is processed and saved to
+        the database.
+        - Error handling is in place for invalid form submissions, with
+        feedback to the user.
+    """
     if request.method == "POST":
         form = UserRegisterForm(request.POST)
         if form.is_valid():
@@ -51,7 +63,9 @@ def register(request):
 
             # Auto-login immediately
             login(request, user)
-            messages.success(request, "Account created successfully. You are now logged in.")
+            messages.success(request, 
+                             "Account created successfully. "
+                             "You are now logged in.")
 
             # Redirect based on role (do NOT redirect to login!)
             if user.role == "journalist":
@@ -71,7 +85,16 @@ def register(request):
 # LOGIN VIEW
 # -------------------------------------------
 def user_login(request):
-    """Login view with proper message handling."""
+    """Handles user authentication and login session creation
+    with role-based redirection.
+    Authenticates users based on username and password.
+    On successful authentication, initiates a login session
+    and redirects users to their respective dashboards:
+        - Journalists to the journalist dashboard.
+        - Editors to the editor dashboard.
+        - Readers to the article list page.
+    Displays error messages for invalid login attempts.
+    """
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -101,7 +124,9 @@ def user_login(request):
 # LOGOUT VIEW
 # -------------------------------------------
 def user_logout(request):
-    """Logout the user and redirect to login."""
+    """Logs out the user and redirect to login page,
+    displaying a logout success message.
+    """
     logout(request)
     # Only show logout message here
     messages.success(request, "You have successfully logged out.")
@@ -112,15 +137,19 @@ def user_logout(request):
 # HOME VIEW
 # -------------------------------------------
 def home(request):
-    """Home page view."""
+    """Renders the Home page (landing page) for the news application."""
     return render(request, 'news_app/home.html')
 
 # -------------------------
 # PUBLIC VIEWS
 # -------------------------
 
+
 def article_list(request):
-    """List approved articles for readers."""
+    """Renders a list of published articles for readers.
+    Fetches articles marked as approved from the database,
+    and displays them in the article list template.
+    """
     articles = Article.objects.filter(approved=True)  # type: ignore[attr-defined]  # pylint: disable=no-member
     return render(
         request,
@@ -135,7 +164,11 @@ def article_list(request):
 
 @login_required
 def editor_dashboard(request):
-    """Dashboard for editors."""
+    """Renders the main dashboard for authorized editors.
+    Allows editors to view and manage articles pending approval
+    within their associated publishing house.
+    Displays a list of unapproved articles for review.
+    """
     if request.user.role != "editor":
         raise PermissionDenied
 
@@ -155,7 +188,11 @@ def editor_dashboard(request):
 
 @login_required
 def approve_article(request, article_id):
-    """Approve an article."""
+    """Only authorized editors can approve an article.
+    Updates the article's approved status to True, allowing it to be visible
+    to readers. Ensures that only articles from the editor's publishing house
+    can be approved, and that the user has the appropriate permissions.
+    """
     if request.user.role != "editor":
         raise PermissionDenied
 
@@ -173,7 +210,15 @@ def approve_article(request, article_id):
 
 @login_required
 def create_newsletter(request):
-    """Create a newsletter (journalist only)."""
+    """Handles the creation of a newsletter by a journalist.
+    Only users with the 'journalist' role are permitted to create newsletters.
+    The view processes the submitted form data, assigns the current user
+    as the author, and associates the newsletter with the user's publishing
+    house if applicable. Upon successful creation, the user is redirected
+    to the journalist dashboard with a success message.
+    Messages are displayed for unauthorized access attempts and successful
+    newsletter creation.
+    """
 
     # Allow ONLY journalists
     if request.user.role != "journalist":
@@ -208,6 +253,16 @@ def create_newsletter(request):
 
 @login_required
 def edit_newsletter(request, newsletter_id):
+    """
+    Allows journalists to edit their own newsletters.
+    Only the author of the newsletter can edit it, and the newsletter must
+    belong to the logged-in journalist. The view handles both GET and POST
+    requests, displaying the edit form with existing data for GET requests and
+    processing form submissions for POST requests. Upon successful editing, the
+    newsletter's approved status is reset to False, requiring re-approval by an
+    editor. Unauthorized access attempts are handled with appropriate error
+    messages and redirections.
+    """
     newsletter = get_object_or_404(
         Newsletter,
         id=newsletter_id,
@@ -229,6 +284,15 @@ def edit_newsletter(request, newsletter_id):
 
 @login_required
 def delete_newsletter(request, newsletter_id):
+    """
+    Deletes a newsletter created by the logged-in journalist.
+    Only the author of the newsletter can delete it. The view handles both
+    GET and POST requests, displaying a confirmation page for GET requests
+    and processing the deletion for POST requests. Upon successful deletion,
+    the user is redirected to the journalist dashboard. Unauthorized access
+    attempts are handled with appropriate error messages and redirections.
+    """
+
     newsletter = get_object_or_404(
         Newsletter,
         id=newsletter_id,
@@ -252,6 +316,13 @@ def delete_newsletter(request, newsletter_id):
 
 @login_required
 def journalist_dashboard(request):
+    """
+    Renders the main dashboard for journalists.
+    Allows journalists to view and manage their own articles
+    and newsletters. Displays a list of articles and newsletters
+    created by the logged-in journalist, ordered by creation date.
+    """
+
     if request.user.role != "journalist":
         return redirect("article_list")
 
@@ -268,7 +339,14 @@ def journalist_dashboard(request):
 
 @login_required
 def submit_article(request):
-    """Submit a new article."""
+    """Handles submission of a new article.
+    Only users with the 'journalist' role are permitted to submit articles.
+    The view processes the submitted form data, assigns the current user
+    as the author, and sets the article's approved status to False.
+    Upon successful submission, the user is redirected to the journalist
+    dashboard with a success message and the article awaits editor approval.
+    if messages are not successful, appropriate error handling is in place.
+    """
     if request.user.role != "journalist":
         raise PermissionDenied
 
@@ -294,6 +372,17 @@ def submit_article(request):
 
 @login_required
 def edit_article(request, article_id):
+    """
+Allows journalists to edit their own articles.
+Only the author of the article can edit it, and the article must belong to
+the logged-in journalist. The view handles both GET and POST requests,
+displaying a form for editing the article on GET requests and processing
+the form submission on POST requests. Upon successful editing, the article's
+approved status is reset to False, requiring re-approval by an editor.
+Unauthorized access attempts are handled with appropriate error
+messages and redirections.
+    """
+
     article = get_object_or_404(
         Article,
         id=article_id,
@@ -315,6 +404,15 @@ def edit_article(request, article_id):
 
 @login_required
 def delete_article(request, article_id):
+    """
+    Deletes an article created by the logged-in journalist.
+    Only the author of the article can delete it. The view handles both
+    GET and POST requests, displaying a confirmation page for GET requests
+    and processing the deletion for POST requests. Upon successful deletion,
+    the user is redirected to the journalist dashboard. Unauthorized access
+    attempts are handled with appropriate error messages and redirections.
+    """
+
     article = get_object_or_404(
         Article,
         id=article_id,
@@ -333,7 +431,11 @@ def delete_article(request, article_id):
 
 
 def article_detail(request, article_id):
-    """View details of an approved article."""
+    """Renders the detail view for an approved article
+    Fetches the article by ID, ensuring it is approved before rendering.
+    If the article is not approved or does not exist, a 404 error is raised.
+    Displays the article's title, content, author, and publication date in the
+    detail template."""
     article = get_object_or_404(
         Article,
         id=article_id,

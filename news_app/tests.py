@@ -8,9 +8,14 @@ User = get_user_model()
 
 
 class UserRegistrationTest(TestCase):
-    """Tests for user registration functionality."""
+    """Tests for user registration functionality.
+    Tests successful registration , validation errors,
+    and redirection based on user role.
+    """
     def test_user_can_register(self):
-        """Test that a user can register successfully."""
+        """Test that a user can register successfully
+        with valid credentials.
+        """
         response = self.client.post(reverse('register'), {
             'username': 'testuser',
             'email': 'test@example.com',
@@ -24,7 +29,9 @@ class UserRegistrationTest(TestCase):
 
 
 class UserRoleAssignmentTest(TestCase):
-    """Tests for user role assignment upon registration."""
+    """Tests for validating user role assignment upon registration.
+    Tests covers that users are assigned correct roles and groups.
+    """
     def test_user_is_assigned_correct_group(self):
         """Test that a user is assigned to the correct group based on role."""
         user = User.objects.create_user(
@@ -37,8 +44,13 @@ class UserRoleAssignmentTest(TestCase):
 
 
 class ArticleWorkflowTest(TestCase):
-    """Tests for article submission and approval workflow."""
+    """Tests for article submission and approval workflow,
+    including approval and notification mechanisms.
+    """
     def setUp(self):
+        """Set up test users and initial data for article workflow tests by
+        creating a journalist and an editor user.
+        """
         self.journalist = User.objects.create_user(
             username='journalist_user',
             password='password123',
@@ -52,7 +64,9 @@ class ArticleWorkflowTest(TestCase):
         )
 
     def test_journalist_can_submit_article(self):
-        """Test that a journalist can submit an article."""
+        """Test that a user with 'journalist' permissions can submit
+          an article and store it in the database.
+          """
         article = Article.objects.create(
             title='Test Article',
             content='Article content',
@@ -64,7 +78,9 @@ class ArticleWorkflowTest(TestCase):
         self.assertFalse(article.approved)
 
     def test_editor_can_approve_article(self):
-        """Test that an editor can approve an article."""
+        """Tests that an authorized editor can approve a submitted article
+          and that the article's approved status is updated correctly.
+        """
         article = Article.objects.create(
             title='Pending Article',
             content='Pending content',

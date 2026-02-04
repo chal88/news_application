@@ -1,4 +1,5 @@
-# news_app/signals.py
+"""Django signals for the news application.
+"""
 from django.db.models.signals import post_migrate, post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import Group, Permission
@@ -19,7 +20,14 @@ except ImportError:
 
 @receiver(post_migrate)
 def create_user_groups(sender, **kwargs):
-    """Create user groups and assign permissions after migrations."""
+    """
+    Create user groups and assign permissions after migrations.
+    This signal ensures that the necessary groups (Reader, Editor, Journalist)
+    and their permissions are set up. It checks if the sender
+    is the news_app to avoid running during unrelated migrations.
+    The permissions for viewing, adding, changing, and deleting articles are
+    assigned according to the role of each group.
+    """
     if sender.name != 'news_app':
         return
     reader_group, _ = Group.objects.get_or_create(name='Reader')
@@ -56,7 +64,12 @@ def create_user_groups(sender, **kwargs):
 
 @receiver(post_save, sender=Article)
 def notify_on_article_approval(sender, instance, created, **kwargs):
-    """Send notifications when an article is approved."""
+    """Send notifications when an article is approved.
+    This signal is triggered after an Article instance is saved.
+    It checks if the article is approved and not yet notified. If so,
+    it sends email notifications to all readers subscribed to the article's
+    publisher or author. It also posts a summary of the article to X.
+    """
     if not instance.approved or instance.notified:
         return
 
@@ -93,7 +106,11 @@ logger = logging.getLogger(__name__)
 
 
 def post_to_x(article):
-    """Posts article summary to X using OAuth 1.0a."""
+    """Posts article summary to X(formerly Twitter) using OAuth 1.0a
+    API credentials must be set in settings.py and tweepy must be installed.
+    An exception is logged if posting fails and the function exits gracefully if
+    tweepy is not available.
+    """
     try:
         client = tweepy.Client(
             consumer_key=settings.X_API_KEY,

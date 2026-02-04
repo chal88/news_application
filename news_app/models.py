@@ -6,15 +6,20 @@ from django.contrib.auth.models import AbstractUser
 
 
 class PublishingHouse(models.Model):
-    """A publishing house that journalists and editors belong to."""
+    """Represents a publishing house that journalists and editors belong to
+    and that articles are associated with.
+    """
     name = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
+        """String representation of the publishing house."""
         return str(self.name)
 
 
 class CustomUser(AbstractUser):
-    """Custom user model with roles."""
+    """Custom user model with roles and optional association to a
+    publishing house for journalists and editors only.
+    """
 
     ROLE_CHOICES = (
         ("reader", "Reader"),
@@ -38,11 +43,16 @@ class CustomUser(AbstractUser):
     )
 
     def __str__(self):
+        """String representation of the user to
+            include username and role for clarity.
+            """
         return str(self.username)
 
 
 class Article(models.Model):
-    """News article model."""
+    """Represents a news article entry with title, content, author,
+    and approval status. These articles are created by journalists
+    and can be approved by editors."""
 
     title = models.CharField(max_length=200)
     content = models.TextField()
@@ -67,11 +77,17 @@ class Article(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
+        """
+        String representation of the article to include title for clarity.
+        """
         return str(self.title)
 
 
 class Newsletter(models.Model):
-    """Newsletter model for periodic updates."""
+    """Represents a newsletter model for periodic updates
+    created by journalists and optionally associated with a publishing house.
+    This model stores the title, content, author, and creation date 
+    of the newsletter."""
     title = models.CharField(max_length=200)
     content = models.TextField()
     author = models.ForeignKey(
@@ -82,4 +98,6 @@ class Newsletter(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
+        """String representation of the newsletter to include
+        title for clarity."""
         return str(self.title)
