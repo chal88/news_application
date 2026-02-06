@@ -1,18 +1,12 @@
 """Forms for user registration and authentication.
 """
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser
 from .models import Article, PublishingHouse, Newsletter
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth.models import Group
 
 
 class UserRegisterForm(forms.ModelForm):
-    """Form for handling registering Reader and Journalist users only
-    This form includes fields for username, email, password, role,
-    and publishing house (for journalists).
-    """
+    """Form for registering Reader, Journalist, and Editor users."""
 
     password1 = forms.CharField(
         label="Password",
@@ -27,6 +21,7 @@ class UserRegisterForm(forms.ModelForm):
         choices=[
             ("reader", "Reader"),
             ("journalist", "Journalist"),
+            ("editor", "Editor"),
         ]
     )
 
@@ -38,14 +33,10 @@ class UserRegisterForm(forms.ModelForm):
 
     new_publishing_house = forms.CharField(
         required=False,
-        label="Or add new publishing house"
+        label="Or add new publishing house (Editors only)"
     )
 
     class Meta:
-        """Configuration for UserRegisterForm.
-        Connects the form to CustomUser model and specifies the
-        exact fields to be rendered and validated.
-        """
         model = CustomUser
         fields = [
             "username",
@@ -57,46 +48,60 @@ class UserRegisterForm(forms.ModelForm):
         ]
 
     def clean(self):
-        """Custom validation for the form fields.
-        Ensures password match and publishing house selection
-        for journalists.
-        """
+        """Custom validation for passwords and publishing house logic."""
         cleaned_data = super().clean()
-
         password1 = cleaned_data.get("password1")
         password2 = cleaned_data.get("password2")
         role = cleaned_data.get("role")
         publishing_house = cleaned_data.get("publishing_house")
         new_publishing_house = cleaned_data.get("new_publishing_house")
 
+        # Validate password match
         if password1 != password2:
-            raise forms.ValidationError("Passwords do not match")
+            raise forms.ValidationError("Passwords do not match.")
 
-        if role == "journalist" and not publishing_house and not new_publishing_house:
-            raise forms.ValidationError(
-                "Journalists must select or create a publishing house."
-            )
+        # Validate publishing house rules
+        if role == "journalist":
+            if not publishing_house:
+                raise forms.ValidationError(
+                    "Journalists must select an existing publishing house."
+                )
+            if new_publishing_house:
+                raise forms.ValidationError(
+                    "Journalists cannot create a new publishing house."
+                )
+
+        if role == "editor":
+            if not publishing_house and not new_publishing_house:
+                raise forms.ValidationError(
+                    "Editors must select an existing publishing house"
+                    " or create a new one."
+                )
 
         return cleaned_data
 
     def save(self, commit=True):
-        """Override save method to handle password hashing
-        and publishing house assignment.
         """
+        Override save method to hash password and assign publishing house.
+         Depending on the role, either assign an existing publishing house
+         or create a new one for editors."""
         user = super().save(commit=False)
-
-        # ✅ IMPORTANT: hash password correctly
         user.set_password(self.cleaned_data["password1"])
 
-        # Handle publishing house creation
+        role = self.cleaned_data.get("role")
         new_ph_name = self.cleaned_data.get("new_publishing_house")
-        if new_ph_name:
+        existing_ph = self.cleaned_data.get("publishing_house")
+
+        # Assign publishing house
+        if role == "editor" and new_ph_name:
+            # Editors can create new publishing house
             publishing_house, _ = PublishingHouse.objects.get_or_create(
                 name=new_ph_name
             )
             user.publishing_house = publishing_house
         else:
-            user.publishing_house = self.cleaned_data.get("publishing_house")
+            # For journalists or editors selecting existing
+            user.publishing_house = existing_ph
 
         if commit:
             user.save()
@@ -115,17 +120,38 @@ class NewsletterForm(forms.ModelForm):
 
 
 class ArticleForm(forms.ModelForm):
-    """Form for creating or updating an article with
-    optional publishing house selection."""
+    """
+    Form for creating or updating an article.
+    Automatically assigns author and publishing house.
+    """
+
     publishing_house = forms.ModelChoiceField(
         queryset=PublishingHouse.objects.all(),
         required=False,
-        empty_label="Independent (No publishing house)"
+        empty_label="Use my publishing house"
     )
 
     class Meta:
-        """Configuration for ArticleForm to specify fields of title,
-        content, and publishing house.
-        """
         model = Article
         fields = ["title", "content", "publishing_house"]
+
+    def __init__(self, *args, **kwargs):
+        # Expect request to be passed in from the view
+        self.request = kwargs.pop("request", None)
+        super().__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        article = super().save(commit=False)
+
+        # Always assign the logged-in journalist as author
+        if self.request:
+            article.author = self.request.user
+
+            # Auto-assign publishing house if not explicitly chosen
+            if not article.publishing_house:
+                article.publishing_house = self.request.user.publishing_house
+
+        if commit:
+            article.save()
+
+        return article

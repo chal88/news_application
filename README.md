@@ -69,11 +69,11 @@ python manage.py migrate
 
 ## User Registration & Login
 
-Users can register themselves as **Reader** or **Journalist**. Editors not created through public registration page. 
+Users can register themselves as **Reader** or **Journalist**, **Editor**. 
 After registering, users can log in using their credentials.
 
 During registration:
-Journalists  must select an existing Publishing House or create a new one.
+Journalists  must select an existing Publishing House.
 Readers do not select a Publishing House.
 
 👥 User Roles & Permissions
@@ -107,51 +107,49 @@ Journalist Capabilities:
 
 This functionality ensures the application reflects real-world newsroom workflows and fulfills the journalist responsibility requirements of the task.
 
-Creating Editors :
+Editor Registration & Permissions
+Editors are registered using the standard registration form as a valid role of the CustomUser model.
+Publishers are not created through public registration.
+Editors have elevated permissions to:
+Review submitted articles
+Approve or delete articles
+Automatically associate articles with a publishing house when approving
 
-Steps to create an Editor:
-Editors do not self-register.
+Article Approval Workflow
+Editors can approve or delete articles directly from the dashboard.
+When an article is approved:
+The approved field is set to True
+If no publishing house is assigned, it is automatically inherited from the author
+The article is removed from the pending list
+A post-save signal is triggered to:
+Notify subscribed readers
+Post a summary of the article to X (formerly Twitter)
 
-Creating an Editor Account by:
-Logging in to the Django Admin panel (/admin) as a superuser.
-Navigate to: Users → Add User.
-Fill in:
-Username
-Email
-Password
-Set the following fields:
-Role: editor
-is_staff: True (required to access the admin panel)
-(Optional) Assign a Publishing House
-Save the user.
-✅ The editor can now log in with these credentials.
+Security & Access Control
+Editor-only views are protected at the view level.
+Non-editor users attempting to access the editor dashboard receive a 403 Forbidden response.
+CSRF protection is enforced on all editor actions.
 
-Only users created using this process will have Editor permissions.
+📝 Editor Access & Responsibilities
+Editors are trusted users responsible for reviewing and approving content submitted by journalists. They may or may not need access to the Django admin panel depending on workflow preferences.
+Reasons an editor might access the admin panel:
 
-2️⃣ Accessing the Application
-Log in using the standard login page on the frontend.
-After login, the editor is redirected to the Editor Dashboard.
-The Editor Dashboard is informational only: it shows pending articles and newsletters but does not allow approval from the frontend.
+1.Approve or manage articles and newsletters
+      * Editors can approve, edit, or delete articles/newsletters submitted by journalists.
+      * Admin provides a convenient interface to bulk approve or manage content.
+2.View content history and metadata
+      * Admin shows timestamps, publishing house assignments, and author info.
+      * Useful for audits, tracking, or reviewing past submissions.
+3. Override or fix content issues
+      * In rare cases, an editor may need to correct a publishing house assignment or other metadata.
+      * Admin gives full access to these fields safely, without changing user accounts.
 
-3️⃣ Approving Articles & Newsletters
-All content approval happens in the Django Admin panel (/admin).
-Editors use the same username and password to log in to the admin site.
-They can then:
-Review pending articles
-Approve or reject articles
-Review and approve newsletters
-Only users with is_staff = True can access this panel.
-
-4️⃣ Security & Best Practices
-Editors cannot grant themselves admin access.
-Superusers control who can become an editor.
-Editors do not have superuser privileges—they can only manage content according to their role.
-
-🔐 Why Django Admin Is Used for Approval
-Ensures secure and controlled access
-Prevents self-approval of content
-Clearly separates content creation and moderation
-Aligns with real-world publishing workflows
+Setup Notes:
+Editors must have is_staff=True to access admin.
+Editors should not have is_superuser=True — this limits them to content management only.
+Core content approval workflow can also be handled entirely through the custom editor dashboard, meaning admin access is optional.
+Summary:
+Admin access for editors is optional. It provides convenience for content review and management, but the custom editor dashboard allows editors to perform all essential approval tasks safely without needing full admin privileges.
 
 
 ### Models
@@ -165,7 +163,7 @@ Aligns with real-world publishing workflows
 
 * Multi-role users: **Reader, Journalist, Editor**
 * **Frontend user registration**
-* **Role selection during registration** (Reader / Journalist)
+* **Role selection during registration** (Reader / Journalist/ Editor)
 * **Journalist Dashboard**: Submit and manage own articles
 * **Editor Dashboard**: Review, approve, reject articles
 * **Reader Dashboard**: View approved articles
@@ -187,9 +185,8 @@ Aligns with real-world publishing workflows
 | ---------- | --------------------------------------------------- |
 | Reader     | View approved articles, receive notifications       |
 | Journalist | Register, submit articles, edit own articles        |
-| Editor     | Approve/reject articles, edit or delete any article |
+| Editor     | Approve/reject articles, edit, delete any article |
 
-> 🔐 Editors cannot self-register and must be created by an administrator.
 
 ---
 
@@ -533,7 +530,7 @@ This application models real-world publishing workflows using relational data.
 
 - **Reader**: Can register normally. Views approved articles.  
 - **Journalist**: Can submit articles independently or under a Publishing House.  
-- **Editor**: Must be created by the superuser. Can view and approve pending articles submitted to their Publishing House.  
+- **Editor**: Can register normally.Can view and approve pending articles submitted to their Publishing House.  
 
 **Login Behavior**:
 - After login, the user is redirected automatically to the appropriate dashboard:

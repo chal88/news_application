@@ -10,7 +10,7 @@ from django.core.exceptions import PermissionDenied
 from news_app.models import Article
 from .forms import UserRegisterForm, ArticleForm
 from .forms import NewsletterForm, Newsletter
-from .models import CustomUser, PublishingHouse
+from .models import PublishingHouse
 
 
 # -------------------------------------------
@@ -54,16 +54,18 @@ def register(request):
             # Handle Publishing House
             new_ph_name = form.cleaned_data.get("new_publishing_house")
             if new_ph_name:
-                publishing_house, _ = PublishingHouse.objects.get_or_create(name=new_ph_name)
+                publishing_house, _ = PublishingHouse.objects.get_or_create(
+                    name=new_ph_name)
                 user.publishing_house = publishing_house
             else:
-                user.publishing_house = form.cleaned_data.get("publishing_house")
+                user.publishing_house = form.cleaned_data.get(
+                    "publishing_house")
 
             user.save()
 
             # Auto-login immediately
             login(request, user)
-            messages.success(request, 
+            messages.success(request,
                              "Account created successfully. "
                              "You are now logged in.")
 
@@ -130,7 +132,7 @@ def user_logout(request):
     logout(request)
     # Only show logout message here
     messages.success(request, "You have successfully logged out.")
-    return redirect("login")
+    return redirect("article_list")
 
 
 # -------------------------------------------
@@ -138,7 +140,7 @@ def user_logout(request):
 # -------------------------------------------
 def home(request):
     """Renders the Home page (landing page) for the news application."""
-    return render(request, 'news_app/home.html')
+    return render(request, 'news_app/article_list.html')
 
 # -------------------------
 # PUBLIC VIEWS
@@ -150,7 +152,8 @@ def article_list(request):
     Fetches articles marked as approved from the database,
     and displays them in the article list template.
     """
-    articles = Article.objects.filter(approved=True)  # type: ignore[attr-defined]  # pylint: disable=no-member
+    # type: ignore[attr-defined]  # pylint: disable=no-member
+    articles = Article.objects.filter(approved=True)
     return render(
         request,
         "news_app/article_list.html",
@@ -162,28 +165,48 @@ def article_list(request):
 # EDITOR VIEWS
 # -------------------------
 
+
 @login_required
 def editor_dashboard(request):
-    """Renders the main dashboard for authorized editors.
-    Allows editors to view and manage articles pending approval
-    within their associated publishing house.
-    Displays a list of unapproved articles for review.
     """
+    Editor dashboard view:
+    - Lists all pending articles for the editor's publishing house
+    - Allows approving or deleting articles via POST
+    - Ensures only editors can access this view and only act on their
+        publishing house's articles.
+    """
+    # Ensure only editors access this view
     if request.user.role != "editor":
-        raise PermissionDenied
+        return redirect("journalist_dashboard")
 
-    publishing_house = request.user.publishing_house
-
-    articles = Article.objects.filter(  # type: ignore[attr-defined]  # pylint: disable=no-member
+    # Get pending articles for the editor's publishing house
+    pending_articles = Article.objects.filter(
         approved=False,
-        publishing_house=publishing_house
+        publishing_house=request.user.publishing_house
     )
 
-    return render(
-        request,
-        "news_app/editor_dashboard.html",
-        {"articles": articles}
-    )
+    if request.method == "POST":
+        article_id = request.POST.get("article_id")
+        action = request.POST.get("action")
+        article = get_object_or_404(Article, id=article_id)
+
+        # Ensure the editor only acts on articles
+        # from their own publishing house
+        if article.publishing_house != request.user.publishing_house:
+            return redirect("editor_dashboard")
+
+        if action == "approve":
+            article.approved = True
+            article.save()
+        elif action == "delete":
+            article.delete()
+
+        return redirect("editor_dashboard")
+
+    context = {
+        "articles": pending_articles
+    }
+    return render(request, "news_app/editor_dashboard.html", context)
 
 
 @login_required
@@ -326,8 +349,10 @@ def journalist_dashboard(request):
     if request.user.role != "journalist":
         return redirect("article_list")
 
-    articles = Article.objects.filter(author=request.user).order_by("-created_at")
-    newsletters = Newsletter.objects.filter(author=request.user).order_by("-created_at")
+    articles = Article.objects.filter(
+        author=request.user).order_by("-created_at")
+    newsletters = Newsletter.objects.filter(
+        author=request.user).order_by("-created_at")
 
     context = {
         "articles": articles,
@@ -351,7 +376,7 @@ def submit_article(request):
         raise PermissionDenied
 
     if request.method == "POST":
-        form = ArticleForm(request.POST)
+        form = ArticleForm(request.POST, request=request)
         if form.is_valid():
             article = form.save(commit=False)
             article.author = request.user
