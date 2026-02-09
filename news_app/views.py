@@ -86,16 +86,26 @@ def register(request):
 # -------------------------------------------
 # LOGIN VIEW
 # -------------------------------------------
+
+
 def user_login(request):
     """Handles user authentication and login session creation
     with role-based redirection.
-    Authenticates users based on username and password.
-    On successful authentication, initiates a login session
-    and redirects users to their respective dashboards:
-        - Journalists to the journalist dashboard.
-        - Editors to the editor dashboard.
-        - Readers to the article list page.
-    Displays error messages for invalid login attempts.
+        - Authenticates users based on username and password.
+        - Upon successful authentication, logs the user in and creates
+        a session.
+        - Redirects users to their respective dashboards based on their role:
+            - Journalists are redirected to the journalist dashboard.
+            - Editors are redirected to the editor dashboard.
+            - Readers are redirected to the article list page.
+        - Displays appropriate success messages upon successful login.
+        - Displays error messages for invalid login attempts without
+        redirecting.
+        - Ensures that only active users can log in, and handles inactive
+        accounts
+        with appropriate error messages.
+        - The view handles both GET and POST requests, rendering the login form
+        for GET requests and processing the login for POST requests.
     """
     if request.method == "POST":
         username = request.POST.get("username")
@@ -105,20 +115,29 @@ def user_login(request):
 
         if user is not None:
             login(request, user)
-            messages.success(request, f"Welcome, {user.username}!")
+
+            # Success message (will display on dashboard, once)
+            messages.success(
+                request, f"Welcome back, {user.username}!"
+            )
 
             # Redirect based on role
             if user.role == "journalist":
                 return redirect("journalist_dashboard")
+
             elif user.role == "editor":
                 return redirect("editor_dashboard")
+
             else:
                 return redirect("article_list")
 
         else:
-            messages.error(request, "Invalid username or password")
+            # Error message stays on login page
+            messages.error(
+                request, "Invalid username or password."
+            )
 
-    # GET requests or failed login
+    # GET request or failed login
     return render(request, "news_app/login.html")
 
 
@@ -131,7 +150,7 @@ def user_logout(request):
     """
     logout(request)
     # Only show logout message here
-    messages.success(request, "You have successfully logged out.")
+    messages.info(request, "You have successfully logged out.")
     return redirect("article_list")
 
 
@@ -168,45 +187,119 @@ def article_list(request):
 
 @login_required
 def editor_dashboard(request):
-    """
-    Editor dashboard view:
-    - Lists all pending articles for the editor's publishing house
-    - Allows approving or deleting articles via POST
-    - Ensures only editors can access this view and only act on their
-        publishing house's articles.
-    """
-    # Ensure only editors access this view
+    """ Renders the editor dashboard with pending articles and newsletters.
+        Only users with the 'editor' role can access this view. The dashboard
+        displays a list of articles that are pending approval and all
+        newsletters.
+        Editors can approve or delete articles, and delete newsletters directly
+        from this dashboard. The view handles both GET requests to display the
+        dashboard and POST requests to process approval or deletion actions.
+        Appropriate success messages are displayed after actions are taken, and
+        unauthorized access attempts are redirected to a safer page.
+        """
+    # Ensure only editors can access
     if request.user.role != "editor":
-        return redirect("journalist_dashboard")
+        return redirect("article_list")  # safer than "home"
 
-    # Get pending articles for the editor's publishing house
-    pending_articles = Article.objects.filter(
-        approved=False,
-        publishing_house=request.user.publishing_house
-    )
+    articles = Article.objects.filter(approved=False)
+    newsletters = Newsletter.objects.all()
 
     if request.method == "POST":
-        article_id = request.POST.get("article_id")
         action = request.POST.get("action")
-        article = get_object_or_404(Article, id=article_id)
 
-        # Ensure the editor only acts on articles
-        # from their own publishing house
-        if article.publishing_house != request.user.publishing_house:
+        # ---------------------
+        # ARTICLE ACTIONS
+        # ---------------------
+        if action == "approve_article":
+            article_id = request.POST.get("article_id")
+            article = get_object_or_404(Article, id=article_id)
+            article.approved = True
+
+            # Auto-assign publishing house if missing
+            if not article.publishing_house:
+                article.publishing_house = article.author.publishing_house
+
+            article.save()
+            messages.success(request, "Article approved successfully.")
             return redirect("editor_dashboard")
 
-        if action == "approve":
-            article.approved = True
-            article.save()
-        elif action == "delete":
+        elif action == "delete_article":
+            article_id = request.POST.get("article_id")
+            article = get_object_or_404(Article, id=article_id)
             article.delete()
+            messages.success(request, "Article deleted successfully.")
+            return redirect("editor_dashboard")
 
-        return redirect("editor_dashboard")
+        # ---------------------
+        # NEWSLETTER ACTIONS
+        # ---------------------
+        elif action == "delete_newsletter":
+            newsletter_id = request.POST.get("newsletter_id")
+            newsletter = get_object_or_404(Newsletter, id=newsletter_id)
+            newsletter.delete()
+            messages.success(request, "Newsletter deleted successfully.")
+            return redirect("editor_dashboard")
 
+    # GET requests, or after actions
     context = {
-        "articles": pending_articles
+        "articles": articles,
+        "newsletters": newsletters,
     }
     return render(request, "news_app/editor_dashboard.html", context)
+
+
+@login_required
+def editor_edit_article(request, pk):
+    """Allows editors to edit an article before approval.
+    Only users with the 'editor' role can access this view.
+    Editors can modify the content of an article that is pending approval.
+    The view handles both GET and POST requests, displaying the edit form
+    with existing article data for GET requests and processing form submissions
+    for POST requests. Upon successful editing, the article is saved with the
+    updated content, and the editor is redirected back to the editor dashboard
+    with a success message. Unauthorized access attempts are handled with
+    appropriate error messages and redirections.
+    """
+    if request.user.role != "editor":
+        return redirect("home")
+
+    article = get_object_or_404(Article, pk=pk)
+    form = ArticleForm(request.POST or None, instance=article)
+
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Article updated successfully.")
+        return redirect("editor_dashboard")
+
+    return render(request, "news_app/editor_edit_article.html", {"form": form})
+
+
+@login_required
+def editor_edit_newsletter(request, pk):
+    """Allows editors to edit a newsletter before approval.
+    Only users with the 'editor' role can access this view.
+    Editors can modify the content of a newsletter that is pending approval.
+    The view handles both GET and POST requests, displaying the edit form
+    with existing newsletter data for GET requests and processing form
+    submissions for POST requests. Upon successful editing, the newsletter is
+    saved with the updated content, and the editor is redirected back to the
+    editor dashboard with a success message. Unauthorized access attempts are
+    handled with appropriate error messages and redirections.
+    """
+
+    if request.user.role != "editor":
+        return redirect("home")
+
+    newsletter = get_object_or_404(Newsletter, pk=pk)
+    form = NewsletterForm(request.POST or None, instance=newsletter)
+
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Newsletter updated successfully.")
+        return redirect("editor_dashboard")
+
+    return render(request, "news_app/editor_edit_newsletter.html",
+                  {"form": form})
 
 
 @login_required

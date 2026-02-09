@@ -21,7 +21,10 @@ urlpatterns = [
     path("editor/", views.editor_dashboard, name="editor_dashboard"),
     path("approve/<int:article_id>/", views.approve_article,
          name="approve_article"),
-
+    path("editor/article/<int:pk>/edit/", views.editor_edit_article,
+         name="editor_edit_article"),
+    path("editor/newsletter/<int:pk>/edit/", views.editor_edit_newsletter,
+         name="editor_edit_newsletter"),
     path("journalist/dashboard/", journalist_dashboard,
          name="journalist_dashboard"),
     path("journalist/submit/", submit_article, name="submit_article"),
