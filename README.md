@@ -1,29 +1,80 @@
-Project News Application 
+Django News Application
 
-Django News Application — role-based article workflow
+Role-based article workflow with Docker and local support
+SQLite is used for local development.
+MariaDB/MySQL is supported for production deployments.
 
-This version:
 
-* Fixes repetition
-* Adds **registration, roles, tests, use case diagram**
-* Clarifies **SQLite vs MariaDB/MySQL**
-* Adds **testing + planning sections**
-* Is **submission-ready**
+# Installation & Setup 
 
----
+This project can be run locally using a virtual environment or inside Docker.
 
-# 📰 Django News Application
+Option1: 
+1. # Run locally using Virtual Environment:
+Clone repository:
+git clone https://github.com/username/news_application.git
+cd news_application/news_project
 
-> **SQLite is used for local development. The application is compatible with MariaDB/MySQL for production deployment.**
+2. # Create and activate virtual environment:
+python3 -m venv venv
+source venv/bin/activate   # macOS / Linux
+venv\Scripts\activate      # Windows
 
----
+3. # Install dependencies:
+pip install -r requirements.txt
+
+4. # Run migrations:
+python manage.py migrate
+
+5. # Create a Superuser (admin acess)
+python manage.py createsuperuser
+
+6. # Start a developer server:
+python manage.py runserver
+Open:http://localhost:8000
+
+Option 2:
+
+Run with docker -Recommended
+
+1. ## Build the Docker image
+docker build -t django-news .
+
+2. ## Run the container
+docker run -it --rm -p 8000:8000 django-news
+open: http://localhost:8000
+Django runs fully inside the container
+No local python or venv required
+
+### Environment variables
+Create a .env file locally if required:
+
+DJANGO_ENV=production
+DB_NAME=news_db
+DB_USER=news_user
+DB_PASSWORD=strongpassword
+DB_HOST=127.0.0.1
+DB_PORT=3306
+
+X_API_KEY=your_api_key
+X_API_SECRET=your_api_secret
+X_ACCESS_TOKEN=your_access_token
+X_ACCESS_TOKEN_SECRET=your_access_token_secret
+X_BEARER_TOKEN=your_bearer_token
+
+.env is excluded via .gitignore
+
 
 ## 📌 Overview
 
-This is a **Django-based News Application** that supports multiple user roles, article submission and approval workflows, email notifications, and API integration.
-It is designed for learning full-stack development concepts such as **authentication, permissions, workflows, signals, and external API integration**.
+## This is a Django-based News Application that supports:
+Role-based authentication
+Article submission and editorial approval
+Email notifications
+REST API access
+Social media integration (X / Twitter)
+It demonstrates real-world newsroom workflows using Django best practices.
 
----
 The manage.py file is located in the project root at
 news_project/news_application/manage.py.
 It serves as the main command-line utility for managing the Django project, including running the development server, applying database migrations, creating superusers, and executing administrative tasks.
@@ -76,7 +127,7 @@ During registration:
 Journalists  must select an existing Publishing House.
 Readers do not select a Publishing House.
 
-👥 User Roles & Permissions
+User Roles & Permissions
 Reader:
    Can view approved articles and newsletters only.
    Cannot create or manage content.
@@ -112,11 +163,11 @@ Editors are registered using the standard registration form as a valid role of t
 Publishers are not created through public registration.
 Editors have elevated permissions to:
 Review submitted articles
-Approve or delete articles
+Approve, edit or delete articles
 Automatically associate articles with a publishing house when approving
 
 Article Approval Workflow
-Editors can approve or delete articles directly from the dashboard.
+Editors can approve, edit or delete articles directly from the dashboard.
 When an article is approved:
 The approved field is set to True
 If no publishing house is assigned, it is automatically inherited from the author
@@ -130,7 +181,7 @@ Editor-only views are protected at the view level.
 Non-editor users attempting to access the editor dashboard receive a 403 Forbidden response.
 CSRF protection is enforced on all editor actions.
 
-📝 Editor Access & Responsibilities
+Editor Access & Responsibilities
 Editors are trusted users responsible for reviewing and approving content submitted by journalists. They may or may not need access to the Django admin panel depending on workflow preferences.
 Reasons an editor might access the admin panel:
 
@@ -143,6 +194,11 @@ Reasons an editor might access the admin panel:
 3. Override or fix content issues
       * In rare cases, an editor may need to correct a publishing house assignment or other metadata.
       * Admin gives full access to these fields safely, without changing user accounts.
+4. Messages / Notifications
+- Login: Welcome message displayed once on the dashboard.
+- Article Approved / Deleted: Displayed immediately on the editor dashboard.
+- Newsletter Deleted: Displayed immediately on the editor dashboard.
+- Logout: Message displayed once on the login page.
 
 Setup Notes:
 Editors must have is_staff=True to access admin.
@@ -229,7 +285,7 @@ X_BEARER_TOKEN=your_bearer_token
 
 ---
 
-## 🧭 Use Case Diagram (Planning)
+##  Use Case Diagram (Planning)
 
 The use case diagram is stored in:
 news_project/Use Case Diagram News App.jpg
@@ -290,8 +346,6 @@ news_app/tests.py
 ```bash
 python manage.py test
 ```
-
----
 
 ## 🗂️ Project Structure
 
@@ -424,67 +478,11 @@ news_application/
     └── pyvenv.cfg
 ```
 
----
-
-## ⚙️ Installation
-
-### 1️⃣ Clone the Repository
-
-```bash
-git clone https://github.com/username/news_application.git
-cd news_application/news_project
-```
-
----
-
-### 2️⃣ Create and Activate Virtual Environment
-
-```bash
-python3 -m venv venv
-source venv/bin/activate   # macOS / Linux
-venv\Scripts\activate      # Windows
-```
-
----
-
-### 3️⃣ Install Dependencies
-
-Before running the project, install the required Python packages.
-
-From the **news_application/news_project/** folder (where `manage.py` is located), run:
-
-```bash
-pip install -r requirements.txt
-
-
----
-
-### 4️⃣ Database Setup
-
-#### Local Development (SQLite)
-
-No configuration required.
-
-#### Production (MariaDB / MySQL)
-
-1. Create database and user
-2. Update `settings.py`
-3. Run migrations
-
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
----
-
 ## 🔔 Email Notifications
 
 * Implemented using **Django signals**
 * Console email backend used for development
 * Notifications are sent **once per approved article**
-
----
 
 ## 🐦 X (Twitter) API Integration
 
@@ -498,17 +496,13 @@ Posting to X requires **five credentials** generated via the X Developer Platfor
 
 Errors from external APIs are **logged to the console** to ensure visibility and debugging.
 
----
-
 ## 🚀 REST API
 
 * Endpoint: `/api/articles/`
 * Returns approved articles
 * Read-only access for public consumption
 
----
-
-## ✅ Completed Features
+## Completed Features
 
 * Role-based authentication & permissions
 * Frontend registration and login
@@ -519,8 +513,6 @@ Errors from external APIs are **logged to the console** to ensure visibility and
 * Use case planning documentation
 * Bootstrap UI
 * GitHub-ready repository
-
----
 
 ## Architecture & Role Relationships
 
@@ -550,6 +542,3 @@ This application models real-world publishing workflows using relational data.
 3. Editor sees only articles belonging to their publishing house
 4. Editor approves or rejects the article
 5. Approved articles become visible to readers
-
-
-
