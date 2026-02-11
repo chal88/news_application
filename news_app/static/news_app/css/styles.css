@@ -1,0 +1,112 @@
+/* ===============================
+   GLOBAL COLOR VARIABLES
+================================ */
+:root {
+    --primary-dark: #09637E;
+    --primary: #088395;
+    --accent: #7AB2B2;
+    --light-bg: #EBF4F6;
+    --white: #ffffff;
+}
+
+/* ===============================
+   BODY STYLING
+================================ */
+body {
+    background-color: var(--light-bg);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--primary-dark);
+}
+
+/* ===============================
+   NAVBAR
+================================ */
+.navbar {
+    background-color: var(--primary-dark) !important;
+}
+
+.navbar .nav-link,
+.navbar-brand {
+    color: var(--white) !important;
+}
+
+.navbar .nav-link:hover {
+    color: var(--accent) !important;
+}
+
+/* ===============================
+   HEADINGS
+================================ */
+h1, h2, h3, h4, h5 {
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+/* ===============================
+   CARDS
+================================ */
+.card {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+    background-color: var(--primary);
+    color: var(--white);
+    font-weight: 500;
+}
+
+/* ===============================
+   BUTTONS
+================================ */
+.btn-primary {
+    background-color: var(--primary);
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-success {
+    background-color: var(--primary);
+    border: none;
+}
+
+.btn-danger {
+    background-color: #c0392b;
+    border: none;
+}
+
+.btn-outline-primary {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary);
+    color: var(--white);
+}
+
+/* ===============================
+   ALERT MESSAGES
+================================ */
+.alert-success {
+    background-color: var(--accent);
+    color: var(--primary-dark);
+    border: none;
+}
+
+.alert-info {
+    background-color: var(--light-bg);
+    color: var(--primary-dark);
+}
+
+/* ===============================
+   FOOTER
+================================ */
+footer {
+    background-color: var(--primary-dark);
+    color: var(--white);
+}

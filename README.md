@@ -514,6 +514,20 @@ Errors from external APIs are **logged to the console** to ensure visibility and
 * Bootstrap UI
 * GitHub-ready repository
 
+## UI & Accessibility Improvements
+
+The user interface was updated using a cohesive teal-based color palette:
+
+- Primary Dark: #09637E
+- Primary: #088395
+- Accent: #7AB2B2
+- Background: #EBF4F6
+
+High contrast between text and background improves readability and accessibility. 
+Buttons use strong color differentiation to clearly signal actions such as approval and deletion.
+
+All interactive elements follow consistent styling to improve visual hierarchy and usability.
+
 ## Architecture & Role Relationships
 
 This application models real-world publishing workflows using relational data.
